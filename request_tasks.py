@@ -1,8 +1,6 @@
 import requests
 import json
 import pandas as pd
-from google.oauth2.service_account import Credentials
-from gspread_formatting import CellFormat, Color, format_cell_range, TextFormat
 import datetime
 
 def seconds_to_hms(seconds):
@@ -53,13 +51,17 @@ def fetch_runrunit_tasks(
 
         tarefas_filtradas = []
 
+        json_filename = f"tarefas_raw.json"
+        with open(json_filename, "w", encoding='utf-8') as file:
+            json.dump(tarefas_filtradas, file, ensure_ascii=False, indent=4)
+
         for tarefa in all_tasks:
 
             estimated_delivery_date = tarefa.get('estimated_delivery_date')
             if estimated_delivery_date:
                 estimated_delivery_date = estimated_delivery_date.split('T')[0]
             else:
-                estimated_delivery_date = 'N/A'  # or any default value you prefer
+                estimated_delivery_date = 'N/A'  # or any default value
 
             tarefa_filtrada = {
                 'data de inicio': tarefa['start_date'],
@@ -71,7 +73,7 @@ def fetch_runrunit_tasks(
                 'titulo': tarefa['title'],
                 'cliente': tarefa['client_name'],
                 'projeto': tarefa['project_name'],
-                'Asset': tarefa['type_name'],
+                'tipo de tarefa': tarefa['type_name'],
                 'colaborador': tarefa['responsible_name'],
                 'estado': tarefa['state'],
                 'status': tarefa['task_status_name'],
@@ -145,7 +147,7 @@ df = fetch_runrunit_tasks(
 print(df.head())  # print the first few rows of the DataFrame to check the result
 
 df_closed = fetch_runrunit_tasks(
-    pages=3,
+    pages=50,
     limit=1000,
     is_closed=True,
     sort="estimated_delivery_date",
