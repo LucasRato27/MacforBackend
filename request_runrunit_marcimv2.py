@@ -72,7 +72,7 @@ def fetch_runrunit_tasks(
                 'titulo': tarefa['title'],
                 'cliente': tarefa['client_name'],
                 'projeto': tarefa['project_name'],
-                'tipo de tarefa': tarefa['type_name'],
+                'Asset': tarefa['type_name'],
                 'colaborador': tarefa['responsible_name'],
                 'estado': tarefa['state'],
                 'status': tarefa['task_status_name'],
