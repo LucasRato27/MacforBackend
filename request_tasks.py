@@ -77,6 +77,7 @@ def fetch_runrunit_tasks(
                 'colaborador': tarefa['responsible_name'],
                 'estado': tarefa['state'],
                 'status': tarefa['task_status_name'],
+                'etapa': tarefa['board_stage_name'],
                 'atraso': tarefa['overdue'],
                 'Time': tarefa['team_name'],
                 'board': tarefa['board_name'],
@@ -155,4 +156,10 @@ df_closed = fetch_runrunit_tasks(
     export_filename="tarefas_"
 )
 
-print(df.head())  # print the first few rows of the DataFrame to check the result
+print(df_closed.head())  # print the first few rows of the DataFrame to check the result
+
+# save df_full to xlsx file
+
+df_full = pd.concat([df, df_closed])
+
+df_full.to_excel("outputs/tarefas_full.xlsx", index=False)
