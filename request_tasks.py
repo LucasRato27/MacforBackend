@@ -82,6 +82,7 @@ def fetch_runrunit_tasks(
                 'Time': tarefa['team_name'],
                 'board': tarefa['board_name'],
                 'foi reaberto': tarefa['was_reopened'],
+                'fechado?': tarefa['is_closed'],
                 'numero de subtarefas': tarefa['subtasks_count'],
                 'tempo trabalhado': seconds_to_hms(tarefa['time_worked']),
                 'priority': tarefa['priority'],
