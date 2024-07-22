@@ -47,6 +47,8 @@ def fetch_runrunit_tasks(
                 all_tasks.extend(tasks)
             else:
                 print(f"Failed to fetch page {page}: {response.status_code}, {response.text}")
+                tasks = response.json()
+                all_tasks.extend(tasks)
                 break
 
         tarefas_filtradas = []
@@ -78,6 +80,8 @@ def fetch_runrunit_tasks(
                 'estado': tarefa['state'],
                 'status': tarefa['task_status_name'],
                 'etapa': tarefa['board_stage_name'],
+                'board_stage_description': tarefa['board_stage_description'],
+                "board_stage_position": tarefa['board_stage_position'],
                 'atraso': tarefa['overdue'],
                 'Time': tarefa['team_name'],
                 'board': tarefa['board_name'],
@@ -138,11 +142,9 @@ def fetch_runrunit_tasks(
 
 # Call the function with the desired parameters
 df = fetch_runrunit_tasks(
-    pages=3,
+    pages=5,
     limit=1000,
     is_closed=False,
-    sort="estimated_delivery_date",
-    sort_dir="desc",
     export_filename="tarefas_"
 )
 
@@ -152,8 +154,6 @@ df_closed = fetch_runrunit_tasks(
     pages=50,
     limit=1000,
     is_closed=True,
-    sort="estimated_delivery_date",
-    sort_dir="desc",
     export_filename="tarefas_"
 )
 
