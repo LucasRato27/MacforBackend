@@ -1,0 +1,173 @@
+[
+    {
+        "id Runrunit": 154950,
+        "titulo": "Mart Minas, 12/08/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "394b1d2b-d158-4584-9e71-3000d6b6244c",
+                    "label": "Houve atraso nas entregas, isso prejudicou os clientes"
+                },
+                {
+                    "id": "32dbfdbd-b2eb-4e75-9f2f-80a6fe94fa53",
+                    "label": "Cliente solicitou ajustes ou refação"
+                }
+            ],
+            "custom_27": "2024-08-12",
+            "custom_28": {
+                "id": "e2114962-f220-4dce-826e-c3782c7991fa",
+                "label": "Mart Minas"
+            }
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 153488,
+        "titulo": "Mart Minas, 07/08/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "32dbfdbd-b2eb-4e75-9f2f-80a6fe94fa53",
+                    "label": "Cliente solicitou ajustes ou refação"
+                },
+                {
+                    "id": "11f3ed58-1668-4b1f-83b3-03824bc4b033",
+                    "label": "Entregas feitas conforme planejado"
+                }
+            ],
+            "custom_27": "2024-08-07",
+            "custom_28": {
+                "id": "e2114962-f220-4dce-826e-c3782c7991fa",
+                "label": "Mart Minas"
+            }
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 149896,
+        "titulo": "Mart Minas, 15/07/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "7adadddc-c032-47fd-98ad-04c94197e8fc",
+                    "label": "Metas não atingidas"
+                },
+                {
+                    "id": "637b8d1f-a441-4ce2-9b13-d8f04fed8e46",
+                    "label": "Feedback positivo"
+                }
+            ],
+            "custom_27": "2024-07-15",
+            "custom_28": {
+                "id": "e2114962-f220-4dce-826e-c3782c7991fa",
+                "label": "Mart Minas"
+            }
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 148735,
+        "titulo": "15/07/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [],
+            "custom_27": "2024-07-15",
+            "custom_28": {
+                "id": "3e2d4a02-77cc-4799-91c6-776f36ffec98",
+                "label": "Iteris"
+            }
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 148734,
+        "titulo": "24/06/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "53b613a8-2bbe-4ea5-afb9-2eae851be26d",
+                    "label": "Cliente pediu proposta"
+                },
+                {
+                    "id": "7adadddc-c032-47fd-98ad-04c94197e8fc",
+                    "label": "Metas não atingidas"
+                }
+            ],
+            "custom_27": "2024-06-24",
+            "custom_28": {
+                "id": "792f982e-950a-4271-9d44-f4e063a7b980",
+                "label": "Evera"
+            }
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 148717,
+        "titulo": "Positivo - 20/07",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {},
+        "tags": []
+    },
+    {
+        "id Runrunit": 145864,
+        "titulo": "ITA, 14/06/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "aaf8cf73-16af-460e-a0d2-59489986ebb9",
+                    "label": "Feedback negativo"
+                },
+                {
+                    "id": "394b1d2b-d158-4584-9e71-3000d6b6244c",
+                    "label": "Houve atraso nas entregas, isso prejudicou os clientes"
+                },
+                {
+                    "id": "7adadddc-c032-47fd-98ad-04c94197e8fc",
+                    "label": "Metas não atingidas"
+                }
+            ],
+            "custom_27": "2024-06-14"
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 145783,
+        "titulo": "Positivo, 05/07/2024",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {
+            "custom_26": [
+                {
+                    "id": "53b613a8-2bbe-4ea5-afb9-2eae851be26d",
+                    "label": "Cliente pediu proposta"
+                },
+                {
+                    "id": "637b8d1f-a441-4ce2-9b13-d8f04fed8e46",
+                    "label": "Feedback positivo"
+                }
+            ],
+            "custom_27": "2024-07-05"
+        },
+        "tags": []
+    },
+    {
+        "id Runrunit": 144154,
+        "titulo": "Teste Healthscore",
+        "estado": "backlog",
+        "Quadro": "Acompanhamento de clientes",
+        "campos personalizados": {},
+        "tags": []
+    }
+]

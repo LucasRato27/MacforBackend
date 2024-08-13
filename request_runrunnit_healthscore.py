@@ -2,9 +2,6 @@ import requests
 import json
 import pandas as pd
 import datetime
-import gspread
-from gspread_dataframe import set_with_dataframe
-from google.oauth2.service_account import Credentials
 
 def seconds_to_hms(seconds):
     hours = seconds // 3600
@@ -15,9 +12,9 @@ def seconds_to_hms(seconds):
 def fetch_runrunit_tasks(
     pages=1,
     limit=1000,
-    is_closed=False,
+    is_closed=None,
     is_working_on=None,
-    sort="desired_date",
+    sort=None,
     sort_dir="desc",
     export_filename="tarefas_filtradas"
 ):
@@ -124,11 +121,8 @@ def fetch_runrunit_tasks(
 
 # Call the function with the desired parameters
 df = fetch_runrunit_tasks(
-    pages=10,
+    pages=5,
     limit=1000,
-    is_closed=False,
-    is_working_on=False,
-    sort="estimated_delivery_date",
     sort_dir="desc",
     export_filename="feedback_full"
 )
