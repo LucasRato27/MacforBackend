@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import datetime
 
+#Function to convert seconds to hms
 def seconds_to_hms(seconds):
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
@@ -10,7 +11,7 @@ def seconds_to_hms(seconds):
     return f"{int(hours)}:{int(minutes)}:{int(seconds)}"
 
 def fetch_runrunit_tasks(
-    pages=1,
+    pages=10,
     limit=1000,
     is_closed=None,
     is_working_on=None,
@@ -72,7 +73,7 @@ def fetch_runrunit_tasks(
             }
             tarefas_filtradas.append(tarefa_filtrada)
 
-
+        #Creating a .sjon file
         json_filename = f"{export_filename}.json"
         with open(json_filename, "w", encoding='utf-8') as file:
             json.dump(tarefas_filtradas, file, ensure_ascii=False, indent=4)
@@ -121,7 +122,7 @@ def fetch_runrunit_tasks(
 
 # Call the function with the desired parameters
 df = fetch_runrunit_tasks(
-    pages=5,
+    pages=10,
     limit=1000,
     sort_dir="desc",
     export_filename="feedback_full"
