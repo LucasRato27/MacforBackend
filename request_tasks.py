@@ -142,7 +142,7 @@ def fetch_runrunit_tasks(
 
 # Call the function with the desired parameters
 df = fetch_runrunit_tasks(
-    pages=5,
+    pages=50,
     limit=1000,
     is_closed=False,
     export_filename="tarefas_"
