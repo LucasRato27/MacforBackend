@@ -1,9 +1,20 @@
+"""
+Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5NozVGXvDkAlrlCgs-5HUc8KeH3BXF-QqHlf4/edit?gid=1456452784#gid=1456452784
+"""
+
+
+
+
 import requests
 import json
 import pandas as pd
 import gspread
+from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
+
+
+
 
 # Função para converter segundos para hms
 def seconds_to_hms(seconds):
@@ -15,7 +26,7 @@ def seconds_to_hms(seconds):
 # Função para fazer a chamada de API e retornar df.
 def fetch_runrunit_tasks(
     pages=10,
-    limit=1000,
+    limit=None,
     is_closed=None,
     is_working_on=None,
     sort=None,
@@ -31,6 +42,7 @@ def fetch_runrunit_tasks(
 
     try:
         for page in range(1, pages + 1):
+            print("opening page", page)
             parameters = {
                 "limit": limit,
                 "is_closed": is_closed,
@@ -105,24 +117,34 @@ def fetch_runrunit_tasks(
 
         df = pd.DataFrame(tarefas_filtradas)
 
+        df.to_excel("tarefas_raw.xlsx", index=False)
+
+        # drop campos personalizados nan
+        df = df.dropna(subset=["campos personalizados"])
+
         # Função para extrair apenas os labels dos campos personalizados
         def extrair_labels(campos_personalizados):
             if isinstance(campos_personalizados, list):
-                return {campo['id']: campo['label'] for campo in campos_personalizados}
+                # Extraindo os labels e unindo em uma string separada por vírgulas
+                return ', '.join(campo['label'] for campo in campos_personalizados if 'label' in campo)
             elif isinstance(campos_personalizados, dict):
-                return {campos_personalizados.get('id', None): campos_personalizados.get('label', None)}
+                # Retornando o valor do label como uma string simples
+                return campos_personalizados.get('label', None)
             else:
                 return None
 
-        # Aplicar a função a cada item da coluna de campos personalizados
-        df['campos personalizados'] = df['campos personalizados'].apply(extrair_labels)
+            
+        # change simple quotes to double quotes
+        # convert campos personalizados to string
+        df["campos personalizados"] = df["campos personalizados"].apply(json.dumps)
+        df['campos personalizados'] = df['campos personalizados'].str.replace("'", '"')
+        df['campos personalizados'] = df['campos personalizados'].apply(json.loads)
 
-        # Agora que a coluna 'campos personalizados' é um dicionário, podemos criar novas colunas
-        for col in df['campos personalizados'].iloc[0].keys():
-            df[col] = df['campos personalizados'].apply(lambda x: x.get(col))
 
-        # Remover a coluna original de campos personalizados
-        df = df.drop(columns=['campos personalizados'])
+        df["custom_37"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_37"]) if "custom_37" in x else None)
+        df["custom_38"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_38"]) if "custom_38" in x else None)
+        df["custom_39"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_39"]) if "custom_39" in x else None)
+        df["custom_40"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_40"]) if "custom_40" in x else None)
 
         # Renomear as colunas de campos customizáveis
         df = df.rename(columns={
@@ -148,7 +170,6 @@ def fetch_runrunit_tasks(
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        df = pd.DataFrame()  # Retornar um DataFrame vazio em caso de erro
 
 
     return df
@@ -170,14 +191,15 @@ def upload_to_sheets(df, sheet_name):
         # Limpar a planilha antes de inserir novos dados
         sheet.clear()
 
-        # Atualizar a planilha com os dados, enviando em blocos se necessário
-        for i in range(0, len(df), 500):
-            sheet.update([df.columns.values.tolist()] + df.iloc[i:i + 500].values.tolist())
+        # Enviar o DataFrame inteiro para o Google Sheets
+        set_with_dataframe(sheet, df)
 
-        print(f"Data uploaded to Google Sheets: {sheet_name}")
+        print(f"Data uploaded successfully to Google Sheets: {sheet_name}")
+        return True
 
     except Exception as e:
         print(f"An error occurred while uploading to Google Sheets: {e}")
+        return False
 
 st.markdown(
     """
@@ -193,6 +215,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 st.markdown(
     """
     <style>
@@ -216,9 +239,9 @@ df = pd.DataFrame()
 # Chamar a função para buscar os dados
 if st.button("Executar"):
     df = fetch_runrunit_tasks(
-        pages=8,
-        limit=150,
-        sort_dir="asc"
+        pages=2,
+        sort_dir="desc",
+        sort="id"
     )
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor")
