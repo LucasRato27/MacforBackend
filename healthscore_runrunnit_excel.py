@@ -73,7 +73,7 @@ def fetch_runrunit_tasks(
             }
             tarefas_filtradas.append(tarefa_filtrada)
 
-        #Creating a .sjon file
+        #Creating a .json file
         json_filename = f"{export_filename}.json"
         with open(json_filename, "w", encoding='utf-8') as file:
             json.dump(tarefas_filtradas, file, ensure_ascii=False, indent=4)

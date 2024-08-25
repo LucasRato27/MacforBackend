@@ -2,8 +2,10 @@ import requests
 import json
 import pandas as pd
 import gspread
+from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
+
 
 # Função para converter segundos para hms
 def seconds_to_hms(seconds):
@@ -12,14 +14,15 @@ def seconds_to_hms(seconds):
     seconds = seconds % 60
     return f"{int(hours)}:{int(minutes)}:{int(seconds)}"
 
+
 # Função para fazer a chamada de API e retornar df.
 def fetch_runrunit_tasks(
-    pages=10,
-    limit=1000,
-    is_closed=None,
-    is_working_on=None,
-    sort=None,
-    sort_dir="desc"
+        pages=10,
+        limit=None,
+        is_closed=None,
+        is_working_on=None,
+        sort=None,
+        sort_dir="desc"
 ):
     url = "https://runrun.it/api/v1.0/tasks"
     headers = {
@@ -31,6 +34,7 @@ def fetch_runrunit_tasks(
 
     try:
         for page in range(1, pages + 1):
+            print("opening page", page)
             parameters = {
                 "limit": limit,
                 "is_closed": is_closed,
@@ -62,49 +66,18 @@ def fetch_runrunit_tasks(
             else:
                 estimated_delivery_date = 'N/A'  # or any default value
 
-
             tarefa_filtrada = {
-                'data de inicio': tarefa['start_date'],
-                'data de fechamento': tarefa['close_date'],
-                'data ideal': tarefa['desired_date'],
-                'data estimada de entrega': estimated_delivery_date,
-                'data fim gantt': tarefa['gantt_bar_end_date'],
                 'id Runrunit': tarefa['id'],
                 'titulo': tarefa['title'],
-                'cliente': tarefa['client_name'],
-                'projeto': tarefa['project_name'],
-                'tipo de tarefa': tarefa['type_name'],
-                'colaborador': tarefa['responsible_name'],
                 'estado': tarefa['state'],
-                'status': tarefa['task_status_name'],
-                'etapa': tarefa['board_stage_name'],
-                'board_stage_description': tarefa['board_stage_description'],
-                "board_stage_position": tarefa['board_stage_position'],
-                'atraso': tarefa['overdue'],
-                'Time': tarefa['team_name'],
-                'board': tarefa['board_name'],
-                'foi reaberto': tarefa['was_reopened'],
-                'fechado?': tarefa['is_closed'],
-                'numero de subtarefas': tarefa['subtasks_count'],
-                'tempo trabalhado': seconds_to_hms(tarefa['time_worked']),
-                'priority': tarefa['priority'],
-                'sendo trabalhado': tarefa['is_working_on'],
-                'é urgente?': tarefa['is_urgent'], 
-                'é subtarefa?': tarefa['is_subtask'],
-                'campos personalizados': tarefa['custom_fields'], # deve ser tratado depois
-                'tags': tarefa['tags_data'],
-                'ids dos filhos': tarefa['child_ids'],
-                'id dos prerequisitos': tarefa['parent_ids'],
-                'id do pai': tarefa['parent_task_id'],
-                'nome do pai': tarefa['parent_task_title'],
-                'ids das subtarefas': tarefa['subtask_ids'],
-                'tempo trabalhado em subtasks': tarefa['all_subtasks_time_worked'],
-                'numero de anexos': tarefa['attachments_count'], # nao sera usado
+                'Quadro': tarefa['board_name'],
+                'campos personalizados': tarefa['custom_fields'],
             }
             tarefas_filtradas.append(tarefa_filtrada)
 
         df = pd.DataFrame(tarefas_filtradas)
 
+        # Função para extrair apenas os labels dos campos personalizados
         # Função para extrair apenas os labels dos campos personalizados
         def extrair_labels(campos_personalizados):
             if isinstance(campos_personalizados, list):
@@ -121,33 +94,28 @@ def fetch_runrunit_tasks(
         # Remover a coluna original de campos personalizados
         df = df.drop(columns=['campos personalizados'])
 
-        # Renomear os campos customizáveis
+        # Renomear as colunas de campos customizáveis
         df = df.rename(columns={
-            'custom_37': 'tipo de solicitacao',
-            'custom_38': 'tipo de job',
-            'custom_39': 'aderencia ao briefing',
-            'custom_40': 'numero de anexo esperados',
+            'custom_26': 'ocorridos',
+            'custom_27': 'data',
+            'custom_28': 'cliente',
         })
+
+        df = df.explode('ocorridos')
 
         # Substituir NaNs para evitar problemas de formatação
         df = df.fillna('')
-
-        # change campos personalizados to string
-        def turn_to_string(x):
-            return json.dumps(x, ensure_ascii=False)
-        df["campos personalizados"] = df["campos personalizados"].apply(turn_to_string)
-        df["tags"] = df["tags"].apply(turn_to_string)
-        df["ids dos filhos"] = df["ids dos filhos"].apply(turn_to_string)
-        df["id dos prerequisitos"] = df["id dos prerequisitos"].apply(turn_to_string)
-        df["ids das subtarefas"] = df["ids das subtarefas"].apply(turn_to_string)
 
         print("Dataframe fetched with dimensions: ", df.shape)
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        df = pd.DataFrame()  # Retornar um DataFrame vazio em caso de erro
+        if 'tarefas_filtradas' in locals():
+            df = pd.DataFrame(tarefas_filtradas)
+            return df
+        else:
+            return pd.DataFrame()  # return an empty DataFrame if no data was fetched
 
-    df.to_excel("tarefas.xlsx", index=False)
     return df
 
 def upload_to_sheets(df, sheet_name):
@@ -155,26 +123,28 @@ def upload_to_sheets(df, sheet_name):
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
-    
+
     # Configurando as credenciais e autenticando com o Google Sheets
     creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scopes)
     client = gspread.authorize(creds)
 
     # Abrindo a planilha e a aba desejada
-    sheet = client.open(sheet_name).sheet1
+    sheet = client.open_by_url(
+        "https://docs.google.com/spreadsheets/d/1pB8OKJzam3uyRL5y8d2q7ATWKwTliYIjhXFW39uaPAU/edit?gid=0#gid=0").sheet1
 
     try:
         # Limpar a planilha antes de inserir novos dados
         sheet.clear()
 
-        # Atualizar a planilha com os dados, enviando em blocos se necessário
-        for i in range(0, len(df), 100):
-            sheet.update([df.columns.values.tolist()] + df.iloc[i:i + 100].values.tolist())
+        # Enviar o DataFrame inteiro para o Google Sheets
+        set_with_dataframe(sheet, df)
 
-        print(f"Data uploaded to Google Sheets: {sheet_name}")
+        print(f"Data uploaded successfully to Google Sheets: {sheet_name}")
+        return True
 
     except Exception as e:
         print(f"An error occurred while uploading to Google Sheets: {e}")
+        return False
 
 st.markdown(
     """
@@ -190,6 +160,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 st.markdown(
     """
     <style>
@@ -203,8 +174,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image("Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
-
+st.image("img/Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
 
 st.title("Runrunit Task Fetcher")
 
@@ -213,15 +183,14 @@ df = pd.DataFrame()
 # Chamar a função para buscar os dados
 if st.button("Executar"):
     df = fetch_runrunit_tasks(
-        pages=8,
-        limit=10000,
-        sort_dir="desc"
+        pages=2,
+        sort_dir="desc",
+        sort="id"
     )
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor")
 
+
 # Verificar o DataFrame antes de enviar para o Google Sheets
 print("df head:\n", df.head(), "\n\n")  # Imprime as primeiras linhas do DataFrame para verificar o resultado
 print("df shape:", df.shape)  # Imprime as dimensões do DataFrame para verificar o resultado
-
-
