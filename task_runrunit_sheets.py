@@ -229,7 +229,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image("Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
+st.image("img/Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
 
 
 st.title("Runrunit Task Fetcher")
