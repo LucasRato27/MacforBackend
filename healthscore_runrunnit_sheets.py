@@ -176,7 +176,7 @@ st.markdown(
 
 st.image("img/Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
 
-st.title("Runrunit Task Fetcher")
+st.title("Runrunit Healthscore Feedback Fetcher")
 
 df = pd.DataFrame()
 
