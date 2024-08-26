@@ -1,11 +1,9 @@
+import logging
 import numpy as np
-import requests
-import json
 import pandas as pd
 import gspread
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
-import streamlit as st
 
 def read_google_sheet(sheet_url):
     """
@@ -34,22 +32,23 @@ criterios = read_google_sheet("https://docs.google.com/spreadsheets/d/1YyiI5GZWP
 # drop all cols after Pontuacoes
 criterios = criterios.loc[:, :'Pontuacoes']
 
-
 # calculate the change in healthscore for each row comparing with Ranking_de_Eventos and ocorridos
 df = df.merge(criterios, how='left', left_on='ocorridos', right_on='Ranking_de_Eventos')
 
 df.rename(columns={'Pontuacoes': 'Delta'}, inplace=True)
 
+
 # convert Delta to float
 df['Delta'] = df['Delta'].str.replace(',', '.').astype(float)
 # change data to datetime
-df['data'] = pd.to_datetime(df['data'], format='%d/%m/%Y', errors='coerce')
+df['data'] = pd.to_datetime(df['data'], errors='coerce')
 
-df.dropna(inplace=True)
+df.dropna(subset=['Ranking_de_Eventos', 'Delta'], inplace=True)
 
 # sort by data
 df.sort_values(by='data', inplace=True)
 df.reset_index(drop=True, inplace=True)
+
 
 
 # Inicializa o healthscore para cada cliente
@@ -57,6 +56,9 @@ df['Healthscore'] = 10
 
 # Dicionário para manter o healthscore por cliente
 healthscore_dict = {}
+
+#Specify the healthscore column type.
+df['Healthscore'] = df['Healthscore'].astype(float)
 
 # Calcula o healthscore acumulado para cada cliente
 for index, row in df.iterrows():
