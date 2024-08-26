@@ -42,6 +42,8 @@ df.rename(columns={'Pontuacoes': 'Delta'}, inplace=True)
 
 # convert Delta to float
 df['Delta'] = df['Delta'].str.replace(',', '.').astype(float)
+# change data to datetime
+df['data'] = pd.to_datetime(df['data'], format='%d/%m/%Y', errors='coerce')
 
 df.dropna(inplace=True)
 
@@ -49,23 +51,32 @@ df.dropna(inplace=True)
 df.sort_values(by='data', inplace=True)
 df.reset_index(drop=True, inplace=True)
 
-# Calculando o Healthscore condicional
-df['Healthscore'] = 10.0
-for i in range(1, len(df)):
-    cliente_atual = df.loc[i, 'cliente']
-    healthscore_anterior = df.loc[i-1, 'Healthscore']
-    soma_deltas_anteriores = 0
-    if df.loc[i, "cliente"] == cliente_atual:
-        soma_deltas_anteriores += df.loc[i, 'Delta']
-        
-        if soma_deltas_anteriores >= 10:
-            break
-    if healthscore_anterior >= 10:
-        df.loc[i, 'Healthscore'] = 10 + df.loc[i, 'Delta']
-    else:
-        df.loc[i, 'Healthscore'] = 10 + soma_deltas_anteriores
 
+# Inicializa o healthscore para cada cliente
+df['Healthscore'] = 10
+
+# Dicionário para manter o healthscore por cliente
+healthscore_dict = {}
+
+# Calcula o healthscore acumulado para cada cliente
+for index, row in df.iterrows():
+    cliente = row['cliente']
+    delta = row['Delta']
     
+    if cliente not in healthscore_dict:
+        healthscore_dict[cliente] = 10
+    
+    # Aplica o delta ao healthscore do cliente
+    healthscore_dict[cliente] += delta
+    
+    # Garante que o healthscore esteja entre 0 e 10
+    if healthscore_dict[cliente] > 10:
+        healthscore_dict[cliente] = 10
+    elif healthscore_dict[cliente] < 0:
+        healthscore_dict[cliente] = 0
+    
+    # Atualiza o valor no DataFrame
+    df.at[index, 'Healthscore'] = healthscore_dict[cliente]
 
 # cap healthscore at 10
 df['Healthscore'] = np.minimum(df['Healthscore'], 10)
