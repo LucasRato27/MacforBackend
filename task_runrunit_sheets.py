@@ -3,8 +3,6 @@ Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5No
 """
 
 
-
-
 import requests
 import json
 import pandas as pd
@@ -154,6 +152,7 @@ def fetch_runrunit_tasks(
             'custom_40': 'numero de anexo esperados',
         })
 
+        df = df.drop(columns=['campos personalizados'])
 
         # Substituir NaNs para evitar problemas de formatação
         df = df.fillna('')
@@ -170,7 +169,6 @@ def fetch_runrunit_tasks(
 
     except Exception as e:
         print(f"An error occurred: {e}")
-
 
     return df
 
