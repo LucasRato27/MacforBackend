@@ -2,7 +2,6 @@
 Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5NozVGXvDkAlrlCgs-5HUc8KeH3BXF-QqHlf4/edit?gid=1456452784#gid=1456452784
 """
 
-
 import requests
 import json
 import pandas as pd
@@ -12,9 +11,27 @@ from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 
 
+def read_google_sheet(sheet_url):
+    """
+    Reads a Google Sheet into a pandas DataFrame.
 
+    Parameters:
+    sheet_url (str): The URL of the Google Sheet.
 
-# Função para converter segundos para hms
+    Returns:
+    pd.DataFrame: The DataFrame containing the Google Sheet data.
+    """
+    # Extract the Google Sheet ID from the URL
+    sheet_id = sheet_url.split('/')[5]
+
+    # Google Sheets CSV export URL format
+    csv_export_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv'
+
+    # Read the CSV into a pandas DataFrame
+    df = pd.read_csv(csv_export_url)
+
+    return df
+
 def seconds_to_hms(seconds):
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
@@ -96,7 +113,7 @@ def fetch_runrunit_tasks(
                 'foi reaberto': tarefa['was_reopened'],
                 'fechado?': tarefa['is_closed'],
                 'numero de subtarefas': tarefa['subtasks_count'],
-                'tempo trabalhado': seconds_to_hms(tarefa['time_worked']),
+                'tempo trabalhado': tarefa['time_worked'],
                 'priority': tarefa['priority'],
                 'sendo trabalhado': tarefa['is_working_on'],
                 'é urgente?': tarefa['is_urgent'], 
@@ -115,7 +132,7 @@ def fetch_runrunit_tasks(
 
         df = pd.DataFrame(tarefas_filtradas)
 
-        df.to_excel("tarefas_raw.xlsx", index=False)
+        df.to_excel("outputs/tarefas.xlsx", index=False)
 
         # drop campos personalizados nan
         df = df.dropna(subset=["campos personalizados"])
@@ -164,6 +181,21 @@ def fetch_runrunit_tasks(
         df["ids dos filhos"] = df["ids dos filhos"].apply(turn_to_string)
         df["id dos prerequisitos"] = df["id dos prerequisitos"].apply(turn_to_string)
         df["ids das subtarefas"] = df["ids das subtarefas"].apply(turn_to_string)
+
+        # Convert timedelta to float representing total hours
+        df['tempo_trabalhado_horas'] = df['tempo trabalhado']/3600.0
+
+        df['tempo trabalhado em subtasks'] = df['tempo trabalhado em subtasks'].replace('', 0)
+
+        df['tempo_subtasks_horas'] = df['tempo trabalhado em subtasks']/3600.0
+
+        df['tempo_total_tasks'] = df['tempo_subtasks_horas'] + df['tempo_trabalhado_horas']
+
+        pontuacoes = read_google_sheet("https://docs.google.com/spreadsheets/d/1iDxF2ONzwaZAdIcuWE-adMyDIEVHGUx6F9nQsG0nYME/edit?gid=0#gid=0")
+
+        df = df.merge(pontuacoes, how='left', left_on='tipo de job', right_on='Tipo_de_Job')
+
+        df = df.drop(columns=['Tipo_de_Job'])
 
         print("Dataframe fetched with dimensions: ", df.shape)
 
@@ -228,7 +260,6 @@ st.markdown(
 )
 
 st.image("img/Logo.png", width=300, caption="", use_column_width=False, output_format="auto", clamp=False, channels="RGB")
-
 
 st.title("Runrunit Task Fetcher")
 
