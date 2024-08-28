@@ -112,9 +112,112 @@ def upload_to_sheets(df, sheet_name):
         print(f"An error occurred while uploading to Google Sheets: {e}")
         return False
 
+def upload_to_sheets_new(df, sheet_name):
+    scopes = [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive'
+    ]
+
+    # Configurando as credenciais e autenticando com o Google Sheets
+    creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scopes)
+    client = gspread.authorize(creds)
+
+    # Abrindo a planilha e a aba desejada
+    sheet = client.open_by_url(
+        "https://docs.google.com/spreadsheets/d/1mw6LiuoAccsUTe9w0Xyo3A2I2tYZiUVvFYThlooXWT0/edit?gid=0#gid=0").sheet1
+
+    try:
+        # Limpar a planilha antes de inserir novos dados
+        sheet.clear()
+
+        # Enviar o DataFrame inteiro para o Google Sheets
+        set_with_dataframe(sheet, df)
+
+        print(f"Data uploaded successfully to Google Sheets: {sheet_name}")
+        return True
+
+    except Exception as e:
+        print(f"An error occurred while uploading to Google Sheets: {e}")
+        return False
+
+def upload_to_sheets_1(df, sheet_name):
+    scopes = [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive'
+    ]
+
+    # Configurando as credenciais e autenticando com o Google Sheets
+    creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scopes)
+    client = gspread.authorize(creds)
+
+    # Abrindo a planilha e a aba desejada
+    sheet = client.open_by_url(
+        "https://docs.google.com/spreadsheets/d/1K_7V15fA-pp3XEYob63ElApiw7MqDDdIyzvhGXula_o/edit?gid=0#gid=0").sheet1
+
+    try:
+        # Limpar a planilha antes de inserir novos dados
+        sheet.clear()
+
+        # Enviar o DataFrame inteiro para o Google Sheets
+        set_with_dataframe(sheet, df)
+
+        print(f"Data uploaded successfully to Google Sheets: {sheet_name}")
+        return True
+
+    except Exception as e:
+        print(f"An error occurred while uploading to Google Sheets: {e}")
+        return False
+
 upload_to_sheets(df, sheet_name="Macfor")
 
-print(df)
-# save df to excel
+# Remover as linhas duplicadas mantendo apenas a última ocorrência de cada semana
+df_last_occurrences = df.drop_duplicates(subset=['cliente', 'data'], keep='last')
 
+# Selecionar apenas as colunas desejadas
+df_last_occurrences = df_last_occurrences[['cliente', 'data', 'Healthscore']]
+
+upload_to_sheets_new(df_last_occurrences, sheet_name="New Macfor")
+
+# Inicializar o novo dataframe com as datas únicas, sorteadas em ordem crescente
+dates = pd.DataFrame(df_last_occurrences['data'].unique(), columns=['data'])
+dates = dates.sort_values(by='data').reset_index(drop=True)
+
+# Criar um dicionário para armazenar as notas de cada cliente, inicializando em 10
+clientes = df_last_occurrences['cliente'].unique()
+notas = {cliente: [10] * len(dates) for cliente in clientes}
+
+# Para cada cliente, atualizar as notas no dicionário conforme os ocorridos
+for _, row in df_last_occurrences.iterrows():
+    cliente = row['cliente']
+    data = row['data']
+    nota = row['Healthscore']
+
+    # Encontrar o índice correspondente à data no dataframe de datas
+    date_index = dates[dates['data'] == data].index[0]
+
+    # Atualizar todas as entradas seguintes com a nova nota
+    notas[cliente][date_index:] = [nota] * (len(dates) - date_index)
+
+# Transformar o dicionário em um dataframe
+df_final = pd.DataFrame(notas)
+df_final.insert(0, 'data', dates['data'])
+
+# Definir a coluna 'data' como índice
+df_final.set_index('data', inplace=True)
+
+# Reamostrar o índice de datas para incluir todos os dias
+df_final = df_final.resample('D').asfreq()
+
+# Preencher os valores NaN resultantes da reamostragem com a última nota conhecida (forward fill)
+df_final.ffill(inplace=True)
+
+# Resetar o índice para transformar a coluna de datas em uma coluna novamente
+df_final.reset_index(inplace=True)
+
+upload_to_sheets_1(df_final, sheet_name="Macfor_Temporal_Series")
+
+print(df)
+
+
+# save df to excel
 df.to_excel("outputs\\healthscore_calculado.xlsx", index=False)
