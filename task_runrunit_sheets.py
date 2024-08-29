@@ -197,6 +197,12 @@ def fetch_runrunit_tasks(
 
         df = df.drop(columns=['Tipo_de_Job'])
 
+        df['Multiplicador'] = df['Multiplicador'].replace('', 0)
+
+        df['Multiplicador'] = df['Multiplicador'].fillna(0)
+
+
+
         print("Dataframe fetched with dimensions: ", df.shape)
 
     except Exception as e:
@@ -268,7 +274,7 @@ df = pd.DataFrame()
 # Chamar a função para buscar os dados
 if st.button("Executar"):
     df = fetch_runrunit_tasks(
-        pages=2,
+        pages=8,
         sort_dir="desc",
         sort="id"
     )
