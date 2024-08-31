@@ -57,7 +57,11 @@ def fetch_runrunit_tasks(
 
     try:
         for page in range(1, pages + 1):
-            print("opening page", page)
+
+            message = f"opening page {page}"
+            print(message)
+            st.write(message)
+
             parameters = {
                 "limit": limit,
                 "is_closed": is_closed,
@@ -83,18 +87,23 @@ def fetch_runrunit_tasks(
             if tarefa['board_name'].lower() != "macfor - outros clientes ":
                 continue
 
-            estimated_delivery_date = tarefa.get('estimated_delivery_date')
-            if estimated_delivery_date:
-                estimated_delivery_date = estimated_delivery_date.split('T')[0]
-            else:
-                estimated_delivery_date = 'N/A'  # or any default value
+            def format_date(date):
+                if date:
+                    return date.split('T')[0]
+                else:
+                    return ''
+                
+            date_fields = ['start_date', 'close_date', 'desired_date', 'gantt_bar_end_date', "estimated_delivery_date"]
 
+            for field in date_fields:
+                tarefa[field] = format_date(tarefa.get(field))
 
             tarefa_filtrada = {
                 'data de inicio': tarefa['start_date'],
                 'data de fechamento': tarefa['close_date'],
                 'data ideal': tarefa['desired_date'],
-                'data estimada de entrega': estimated_delivery_date,
+                'data ideal de inicio': tarefa['desired_start_date'],
+                'data estimada de entrega': tarefa['estimated_delivery_date'],
                 'data fim gantt': tarefa['gantt_bar_end_date'],
                 'id Runrunit': tarefa['id'],
                 'titulo': tarefa['title'],
@@ -132,7 +141,7 @@ def fetch_runrunit_tasks(
 
         df = pd.DataFrame(tarefas_filtradas)
 
-        df.to_excel("outputs/tarefas.xlsx", index=False)
+        # df.to_excel("outputs/tarefas.xlsx", index=False)
 
         # drop campos personalizados nan
         df = df.dropna(subset=["campos personalizados"])
@@ -201,12 +210,44 @@ def fetch_runrunit_tasks(
 
         df['Multiplicador'] = df['Multiplicador'].fillna(0)
 
+        df["atraso"] = df["atraso"].replace({
+            "on_schedule": "1. No prazo",
+            "soft_overdue": "2. Atrasado",
+            "hard_overdue": "3. Muito atrasado"
+        })
+
+        # rename multiplicador to pontuacao
+        df = df.rename(columns={
+            'Multiplicador': 'Pontuação'
+        })
+
+
+        # coluna a se basear para datas
+        data_base = "data ideal"
+        # Converte a coluna data_base para datetime, ignorando erros
+        df[data_base] = pd.to_datetime(df[data_base], errors='coerce')
+
+        # Extrai o primeiro dia do mês e ano da data
+        df['mes da tarefa'] = df[data_base].dt.to_period('M')
+        df["mes do ano"] = df[data_base].dt.month
+        df['ano da tarefa'] = df[data_base].dt.year
+        
+
+        # Preenche valores nulos com string vazia
+        df.fillna("", inplace=True)
+
+        df[data_base] = df[data_base].astype(str)
+        df[data_base] = df[data_base].str.replace("NaT", "")
+
 
 
         print("Dataframe fetched with dimensions: ", df.shape)
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        st.write(f"An error occurred: {e}")
+        st.write(f"Se ocorreu um erro, rode novamente o script. Se ele for de conexão, tentar novamente tende a resolver. Se persistir, entre em contato com o desenvolvedor.")
+        df = pd.DataFrame()  # return an empty DataFrame if no data was fetched
 
     return df
 
@@ -231,9 +272,11 @@ def upload_to_sheets(df, sheet_name):
         set_with_dataframe(sheet, df)
 
         print(f"Data uploaded successfully to Google Sheets: {sheet_name}")
+        st.write(f"Data uploaded successfully to Google Sheets: {sheet_name}")
         return True
 
     except Exception as e:
+        st.write(f"An error occurred while uploading to Google Sheets: {e}")
         print(f"An error occurred while uploading to Google Sheets: {e}")
         return False
 
@@ -271,10 +314,12 @@ st.title("Runrunit Task Fetcher")
 
 df = pd.DataFrame()
 
+n_pags = st.number_input("Número de páginas", min_value=1, max_value=100, value=20, step=1, format="%d")
+
 # Chamar a função para buscar os dados
 if st.button("Executar"):
     df = fetch_runrunit_tasks(
-        pages=8,
+        pages=n_pags,
         sort_dir="desc",
         sort="id"
     )
