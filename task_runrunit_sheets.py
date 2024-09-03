@@ -204,6 +204,10 @@ def fetch_runrunit_tasks(
 
         df = df.merge(pontuacoes, how='left', left_on='tipo de job', right_on='Tipo_de_Job')
 
+        df['Multiplicador'] = df['Multiplicador'].replace(',','.')
+
+        df['Multiplicador'] = pd.to_numeric(df['Multiplicador'], errors='coerce')
+
         df = df.drop(columns=['Tipo_de_Job'])
 
         df['Multiplicador'] = df['Multiplicador'].replace('', 0)
