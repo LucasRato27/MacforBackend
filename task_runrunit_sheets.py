@@ -9,6 +9,7 @@ import gspread
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
+from pandas.core.config_init import pc_east_asian_width_doc
 
 
 def read_google_sheet(sheet_url):
@@ -204,15 +205,19 @@ def fetch_runrunit_tasks(
 
         df = df.merge(pontuacoes, how='left', left_on='tipo de job', right_on='Tipo_de_Job')
 
-        df['Multiplicador'] = df['Multiplicador'].replace(',','.')
+        # Step 1: Fill NaN values in the 'Multiplicador' column with 0
+        df['Multiplicador'] = df['Multiplicador'].fillna(0)
 
+        # Step 2: Ensure there are no leading or trailing spaces, then replace commas with dots
+        df['Multiplicador'] = df['Multiplicador'].str.strip().replace(',', '.', regex=True)
+
+        # Step 3: Convert 'Multiplicador' to numeric, coercing errors to NaN
         df['Multiplicador'] = pd.to_numeric(df['Multiplicador'], errors='coerce')
 
-        df = df.drop(columns=['Tipo_de_Job'])
-
-        df['Multiplicador'] = df['Multiplicador'].replace('', 0)
-
+        # Step 4: Fill any remaining NaN values with 0 (optional, depending on your needs)
         df['Multiplicador'] = df['Multiplicador'].fillna(0)
+
+        df = df.drop(columns=['Tipo_de_Job'])
 
         df["atraso"] = df["atraso"].replace({
             "on_schedule": "1. No prazo",
@@ -235,15 +240,11 @@ def fetch_runrunit_tasks(
         df['mes da tarefa'] = df[data_base].dt.to_period('M')
         df["mes do ano"] = df[data_base].dt.month
         df['ano da tarefa'] = df[data_base].dt.year
-        
-
-        # Preenche valores nulos com string vazia
-        df.fillna("", inplace=True)
 
         df[data_base] = df[data_base].astype(str)
         df[data_base] = df[data_base].str.replace("NaT", "")
 
-
+        df.to_excel('outputs/tarefas.xlsx', index=False)
 
         print("Dataframe fetched with dimensions: ", df.shape)
 
