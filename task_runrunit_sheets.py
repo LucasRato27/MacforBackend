@@ -9,7 +9,6 @@ import gspread
 from gspread_dataframe import set_with_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
-from pandas.core.config_init import pc_east_asian_width_doc
 
 
 def read_google_sheet(sheet_url):
@@ -30,8 +29,8 @@ def read_google_sheet(sheet_url):
 
     # Read the CSV into a pandas DataFrame
     df = pd.read_csv(csv_export_url)
-
     return df
+
 
 def seconds_to_hms(seconds):
     hours = seconds // 3600
@@ -93,7 +92,7 @@ def fetch_runrunit_tasks(
                     return date.split('T')[0]
                 else:
                     return ''
-                
+
             date_fields = ['start_date', 'close_date', 'desired_date', 'gantt_bar_end_date', "estimated_delivery_date"]
 
             for field in date_fields:
@@ -126,7 +125,7 @@ def fetch_runrunit_tasks(
                 'tempo trabalhado': tarefa['time_worked'],
                 'priority': tarefa['priority'],
                 'sendo trabalhado': tarefa['is_working_on'],
-                'é urgente?': tarefa['is_urgent'], 
+                'é urgente?': tarefa['is_urgent'],
                 'é subtarefa?': tarefa['is_subtask'],
                 'campos personalizados': tarefa['custom_fields'], # deve ser tratado depois
                 'tags': tarefa['tags_data'],
@@ -158,7 +157,7 @@ def fetch_runrunit_tasks(
             else:
                 return None
 
-            
+
         # change simple quotes to double quotes
         # convert campos personalizados to string
         df["campos personalizados"] = df["campos personalizados"].apply(json.dumps)
@@ -170,6 +169,7 @@ def fetch_runrunit_tasks(
         df["custom_38"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_38"]) if "custom_38" in x else None)
         df["custom_39"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_39"]) if "custom_39" in x else None)
         df["custom_40"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_40"]) if "custom_40" in x else None)
+        df["custom_46"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_46"]) if "custom_46" in x else None)
 
         # Renomear as colunas de campos customizáveis
         df = df.rename(columns={
@@ -177,6 +177,7 @@ def fetch_runrunit_tasks(
             'custom_38': 'tipo de job',
             'custom_39': 'aderencia ao briefing',
             'custom_40': 'numero de anexo esperados',
+            'custom_46': 'motivacao da solicitacao',
         })
 
         df = df.drop(columns=['campos personalizados'])
@@ -261,7 +262,7 @@ def upload_to_sheets(df, sheet_name):
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
-    
+
     # Configurando as credenciais e autenticando com o Google Sheets
     creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scopes)
     client = gspread.authorize(creds)
