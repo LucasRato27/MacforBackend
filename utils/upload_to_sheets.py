@@ -15,16 +15,13 @@ def upload_to_sheets(df, sheet_name, sheet_url):
     # Carregar as credenciais dos segredos do Streamlit
     creds_info = st.secrets["google_credentials"]
 
-    # Converter as credenciais JSON em um dicionário Python
-    creds_dict = json.loads(creds_info)
-
     # Criar as credenciais a partir do dicionário e incluir os escopos
-    creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    creds = service_account.Credentials.from_service_account_info(creds_info, scopes=scopes)
 
     # Autenticar com as credenciais e acessar o Google Sheets
     client = gspread.authorize(creds)
 
-    # Abrindo a planilha e a aba desejada
+    # Abrir a planilha e a aba desejada
     sheet = client.open_by_url(sheet_url).sheet1
 
     try:
