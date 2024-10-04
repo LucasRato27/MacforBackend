@@ -7,10 +7,6 @@ from calculo_healthscore import calculate_heathscore
 st.markdown(
     """
     <style>
-    /* Remover a barra branca no topo */
-    .block-container {
-        padding-top: 0;
-    }
 
     /* Alterar o fundo para preto e o texto para branco */
     body {
