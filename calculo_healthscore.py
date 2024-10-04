@@ -1,10 +1,15 @@
 from utils.upload_to_sheets import upload_to_sheets
 from utils.read_sheet import read_google_sheet
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
 def calculate_heathscore():
-    df = pd.read_excel("outputs\\feedback_full.xlsx")
+    # Construir o caminho de forma agnóstica ao sistema operacional
+    file_path = Path("outputs") / "feedback_full.xlsx"
+
+    # Ler o arquivo Excel
+    df = pd.read_excel(file_path)
 
     criterios = read_google_sheet(
         "https://docs.google.com/spreadsheets/d/1YyiI5GZWP8orU-3YMEln6hKYKUJVrriTgiTyB6849qE/edit?gid=124241289#gid=124241289")
