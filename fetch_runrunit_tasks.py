@@ -341,9 +341,10 @@ def fetch_runrunit_tasks(n_pags):
 
     # Aplicar a função no dataframe de tarefas
     df_taxa_refacao = calcular_taxa_refacao(df)
+    df_taxa_refacao.to_excel('outputs/refacao.xlsx', index=False)
 
     df_taxa_atraso = calcular_taxa_atraso(df)
-
+    df_taxa_atraso.to_excel('outputs/atraso.xlsx', index=False)
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
