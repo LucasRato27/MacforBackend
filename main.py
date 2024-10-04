@@ -3,10 +3,15 @@ from fetch_runrunit_tasks import fetch_runrunit_tasks
 from healthscore_runrunnit_sheets import fetch_runrunit_feedback
 from calculo_healthscore import calculate_heathscore
 
-# Estilos de CSS para alterar o fundo para preto e o texto para branco
+# Estilos de CSS para alterar o fundo para preto e o texto para branco, além de ajustar o botão
 st.markdown(
     """
     <style>
+    /* Remover a barra branca no topo */
+    .block-container {
+        padding-top: 0;
+    }
+
     /* Alterar o fundo para preto e o texto para branco */
     body {
         background-color: black;
@@ -30,9 +35,25 @@ st.markdown(
         margin-right: auto;
         font-size: 80px;
         padding: 20px 40px;
-        background-color: white;
-        color: black;
+        background-color: #333333; /* Fundo cinza escuro para o botão */
+        color: white; /* Texto branco */
+        border: 2px solid white; /* Bordas brancas para o botão */
+        border-radius: 10px; /* Bordas arredondadas */
     }
+
+    /* Alterar a cor de foco do botão */
+    div.stButton > button:focus {
+        background-color: #555555;
+        color: white;
+    }
+
+    /* Ajustar o input de número para se adequar ao tema */
+    input {
+        background-color: #333333;
+        color: white;
+        border: 1px solid white;
+    }
+
     </style>
     """,
     unsafe_allow_html=True
