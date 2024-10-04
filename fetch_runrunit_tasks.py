@@ -57,6 +57,46 @@ def fetch_runrunit_tasks(n_pags):
 
         return df_taxa_refacao
 
+    def calcular_taxa_atraso(df):
+        # Verificar se a coluna 'atraso' existe
+        if 'atraso' not in df.columns:
+            raise KeyError("A coluna 'atraso' não foi encontrada no dataframe.")
+
+        # Converter 'data de inicio' para formato datetime
+        df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
+
+        # Remover linhas onde 'data de inicio' é NaT
+        df = df.dropna(subset=['data de inicio'])
+
+        # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
+        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
+
+        # Filtrar tarefas de atraso (2. Atrasado e 3. Muito atrasado)
+        df_atraso = df[df['atraso'].isin(['2. Atrasado', '3. Muito atrasado'])]
+
+        # Contar o total de tarefas por mês
+        total_tarefas_mes = df.groupby('mes_ano').size()
+
+        # Contar o total de atrasos por mês
+        total_atraso_mes = df_atraso.groupby('mes_ano').size()
+
+        # Calcular a taxa de atraso como uma porcentagem
+        taxa_atraso = (total_atraso_mes / total_tarefas_mes) * 100
+
+        # Criar uma coluna 'mes_ano_str' que converte o período para string no formato 'MM/AAAA'
+        mes_ano_str = total_tarefas_mes.index.strftime('%m/%Y')
+
+        # Criar um dataframe final com a taxa de atraso por mês e adicionar 'mes_ano_str'
+        df_taxa_atraso = pd.DataFrame({
+            'mes_ano': mes_ano_str,  # Nova coluna com mês e ano
+            'total_tarefas': total_tarefas_mes,
+            'total_atraso': total_atraso_mes,
+            'taxa_atraso_percentual': taxa_atraso
+        }).fillna(0)  # Preencher valores nulos com 0
+
+        print("DataFrame final de taxa de atraso:\n", df_taxa_atraso)
+
+        return df_taxa_atraso
 
     def read_google_sheet(sheet_url):
         """
@@ -315,6 +355,9 @@ def fetch_runrunit_tasks(n_pags):
     # Aplicar a função no dataframe de tarefas
     df_taxa_refacao = calcular_taxa_refacao(df)
 
+    df_taxa_atraso = calcular_taxa_atraso(df)
+
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
+    upload_to_sheets(df_taxa_atraso, sheet_name="Macfor - Taxa de Atraso",sheet_url="https://docs.google.com/spreadsheets/d/1UL6Ya0MJRK0AMFFDCo_kKd3DyKfvY6oDcGMKGT-ZQ8o/edit?gid=0#gid=0")
