@@ -1,18 +1,27 @@
-import pandas as pd
+import streamlit as st
+import json
 import gspread
+from google.oauth2 import service_account
 from gspread_dataframe import set_with_dataframe
-from oauth2client.service_account import ServiceAccountCredentials
-from pathlib import Path
 
 
 def upload_to_sheets(df, sheet_name, sheet_url):
+    # Definir os escopos necessários
     scopes = [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
 
-    # Configurando as credenciais e autenticando com o Google Sheets
-    creds = ServiceAccountCredentials.from_json_keyfile_name(Path('credentials.json'), scopes)
+    # Carregar as credenciais dos segredos do Streamlit
+    creds_info = st.secrets["google_credentials"]
+
+    # Converter as credenciais JSON em um dicionário Python
+    creds_dict = json.loads(creds_info)
+
+    # Criar as credenciais a partir do dicionário e incluir os escopos
+    creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=scopes)
+
+    # Autenticar com as credenciais e acessar o Google Sheets
     client = gspread.authorize(creds)
 
     # Abrindo a planilha e a aba desejada
