@@ -1,10 +1,7 @@
 import requests
 import json
 import pandas as pd
-import gspread
 import streamlit as st
-from google.oauth2 import service_account
-from gspread_dataframe import set_with_dataframe
 from utils.upload_to_sheets import upload_to_sheets
 
 """
@@ -12,11 +9,10 @@ Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5No
 """
 
 def fetch_runrunit_tasks(n_pags):
-
     def calcular_taxa_refacao(df):
-        # Verificar se a coluna 'tipo de job' existe
-        if 'tipo de job' not in df.columns:
-            raise KeyError("A coluna 'tipo de job' não foi encontrada no dataframe.")
+        # Verificar se as colunas 'tipo de job' e 'cliente' existem
+        if 'tipo de job' not in df.columns or 'cliente' not in df.columns:
+            raise KeyError("As colunas 'tipo de job' ou 'cliente' não foram encontradas no dataframe.")
 
         # Converter 'data de inicio' para formato datetime
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
@@ -28,39 +24,35 @@ def fetch_runrunit_tasks(n_pags):
         df['mes_ano'] = df['data de inicio'].dt.to_period('M')
 
         # Filtrar tarefas de Refação ou Retrabalho, após criar a coluna 'mes_ano'
-        df_refacao = df[df['tipo de job'].str.contains('Refação|Retrabalho|Ajuste Complexo|Ajuste Simples', case=False, na=False)]
+        df_refacao = df[
+            df['tipo de job'].str.contains('Refação|Retrabalho|Ajuste Complexo|Ajuste Simples', case=False, na=False)]
 
         # Verificar se a coluna 'mes_ano' foi criada corretamente em df_refacao
         print(f"Colunas no DataFrame df_refacao: {df_refacao.columns}")
 
-        # Contar o total de tarefas por mês
-        total_tarefas_mes = df.groupby('mes_ano').size()
+        # Contar o total de tarefas por cliente e mês
+        total_tarefas_mes_cliente = df.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
-        # Contar o total de refações por mês
-        total_refacao_mes = df_refacao.groupby('mes_ano').size()
+        # Contar o total de refações por cliente e mês
+        total_refacao_mes_cliente = df_refacao.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
         # Calcular a taxa de refação como uma porcentagem
-        taxa_refacao = (total_refacao_mes / total_tarefas_mes) * 100
+        taxa_refacao_cliente = (total_refacao_mes_cliente / total_tarefas_mes_cliente) * 100
+
+        # Preencher valores NaN com 0 (casos onde não houve refação ou tarefa)
+        taxa_refacao_cliente = taxa_refacao_cliente.fillna(0)
 
         # Criar uma coluna 'mes_ano_str' que converte o período para string no formato 'MM/AAAA'
-        mes_ano_str = total_tarefas_mes.index.strftime('%m/%Y')
+        taxa_refacao_cliente.index = taxa_refacao_cliente.index.strftime('%m/%Y')
 
-        # Criar um dataframe final com a taxa de refação por mês e adicionar 'mes_ano_str'
-        df_taxa_refacao = pd.DataFrame({
-            'mes_ano': mes_ano_str,  # Nova coluna com mês e ano
-            'total_tarefas': total_tarefas_mes,
-            'total_refacao': total_refacao_mes,
-            'taxa_refacao_percentual': taxa_refacao
-        }).fillna(0)  # Preencher valores nulos com 0
+        print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
 
-        print("DataFrame final de taxa de refação:\n", df_taxa_refacao)
-
-        return df_taxa_refacao
+        return taxa_refacao_cliente
 
     def calcular_taxa_atraso(df):
-        # Verificar se a coluna 'atraso' existe
-        if 'atraso' not in df.columns:
-            raise KeyError("A coluna 'atraso' não foi encontrada no dataframe.")
+        # Verificar se as colunas 'atraso' e 'cliente' existem
+        if 'atraso' not in df.columns or 'cliente' not in df.columns:
+            raise KeyError("As colunas 'atraso' ou 'cliente' não foram encontradas no dataframe.")
 
         # Converter 'data de inicio' para formato datetime
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
@@ -74,29 +66,24 @@ def fetch_runrunit_tasks(n_pags):
         # Filtrar tarefas de atraso (2. Atrasado e 3. Muito atrasado)
         df_atraso = df[df['atraso'].isin(['2. Atrasado', '3. Muito atrasado'])]
 
-        # Contar o total de tarefas por mês
-        total_tarefas_mes = df.groupby('mes_ano').size()
+        # Contar o total de tarefas por cliente e mês
+        total_tarefas_mes_cliente = df.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
-        # Contar o total de atrasos por mês
-        total_atraso_mes = df_atraso.groupby('mes_ano').size()
+        # Contar o total de atrasos por cliente e mês
+        total_atraso_mes_cliente = df_atraso.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
         # Calcular a taxa de atraso como uma porcentagem
-        taxa_atraso = (total_atraso_mes / total_tarefas_mes) * 100
+        taxa_atraso_cliente = (total_atraso_mes_cliente / total_tarefas_mes_cliente) * 100
+
+        # Preencher valores NaN com 0 (casos onde não houve atraso ou tarefa)
+        taxa_atraso_cliente = taxa_atraso_cliente.fillna(0)
 
         # Criar uma coluna 'mes_ano_str' que converte o período para string no formato 'MM/AAAA'
-        mes_ano_str = total_tarefas_mes.index.strftime('%m/%Y')
+        taxa_atraso_cliente.index = taxa_atraso_cliente.index.strftime('%m/%Y')
 
-        # Criar um dataframe final com a taxa de atraso por mês e adicionar 'mes_ano_str'
-        df_taxa_atraso = pd.DataFrame({
-            'mes_ano': mes_ano_str,  # Nova coluna com mês e ano
-            'total_tarefas': total_tarefas_mes,
-            'total_atraso': total_atraso_mes,
-            'taxa_atraso_percentual': taxa_atraso
-        }).fillna(0)  # Preencher valores nulos com 0
+        print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
 
-        print("DataFrame final de taxa de atraso:\n", df_taxa_atraso)
-
-        return df_taxa_atraso
+        return taxa_atraso_cliente
 
     def read_google_sheet(sheet_url):
         """
