@@ -23,12 +23,9 @@ def fetch_runrunit_tasks(n_pags):
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
         df['mes_ano'] = df['data de inicio'].dt.to_period('M')
 
-        # Filtrar tarefas de Refação ou Retrabalho, após criar a coluna 'mes_ano'
+        # Filtrar tarefas de Refação ou Retrabalho
         df_refacao = df[
             df['tipo de job'].str.contains('Refação|Retrabalho|Ajuste Complexo|Ajuste Simples', case=False, na=False)]
-
-        # Verificar se a coluna 'mes_ano' foi criada corretamente em df_refacao
-        print(f"Colunas no DataFrame df_refacao: {df_refacao.columns}")
 
         # Contar o total de tarefas por cliente e mês
         total_tarefas_mes_cliente = df.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
@@ -42,8 +39,11 @@ def fetch_runrunit_tasks(n_pags):
         # Preencher valores NaN com 0 (casos onde não houve refação ou tarefa)
         taxa_refacao_cliente = taxa_refacao_cliente.fillna(0)
 
-        # Criar uma coluna 'mes_ano_str' que converte o período para string no formato 'MM/AAAA'
-        taxa_refacao_cliente.index = taxa_refacao_cliente.index.strftime('%m/%Y')
+        # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
+        taxa_refacao_cliente = taxa_refacao_cliente.reset_index()
+
+        # Converter o período para string no formato 'MM/AAAA' (sem usar datetime, diretamente com o Period)
+        taxa_refacao_cliente['mes_ano_str'] = taxa_refacao_cliente['mes_ano'].astype(str)
 
         print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
 
@@ -78,8 +78,11 @@ def fetch_runrunit_tasks(n_pags):
         # Preencher valores NaN com 0 (casos onde não houve atraso ou tarefa)
         taxa_atraso_cliente = taxa_atraso_cliente.fillna(0)
 
-        # Criar uma coluna 'mes_ano_str' que converte o período para string no formato 'MM/AAAA'
-        taxa_atraso_cliente.index = taxa_atraso_cliente.index.strftime('%m/%Y')
+        # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
+        taxa_atraso_cliente = taxa_atraso_cliente.reset_index()
+
+        # Converter o período para string no formato 'MM/AAAA' diretamente com astype
+        taxa_atraso_cliente['mes_ano_str'] = taxa_atraso_cliente['mes_ano'].astype(str)
 
         print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
 
@@ -349,3 +352,4 @@ def fetch_runrunit_tasks(n_pags):
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_atraso, sheet_name="Macfor - Taxa de Atraso",sheet_url="https://docs.google.com/spreadsheets/d/1UL6Ya0MJRK0AMFFDCo_kKd3DyKfvY6oDcGMKGT-ZQ8o/edit?gid=0#gid=0")
+
