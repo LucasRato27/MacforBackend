@@ -9,6 +9,85 @@ Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5No
 """
 
 def fetch_runrunit_tasks(n_pags):
+    def calcular_taxa_atraso_por_colaborador(df):
+        # Verificar se as colunas 'atraso' e 'colaborador' existem
+        if 'atraso' not in df.columns or 'colaborador' not in df.columns:
+            raise KeyError("As colunas 'atraso' ou 'colaborador' não foram encontradas no dataframe.")
+
+        # Converter 'data de inicio' para formato datetime
+        df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
+
+        # Remover linhas onde 'data de inicio' é NaT
+        df = df.dropna(subset=['data de inicio'])
+
+        # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
+        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
+
+        # Filtrar tarefas de atraso (2. Atrasado e 3. Muito atrasado)
+        df_atraso = df[df['atraso'].isin(['2. Atrasado', '3. Muito atrasado'])]
+
+        # Contar o total de tarefas por colaborador e mês
+        total_tarefas_mes_colaborador = df.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
+
+        # Contar o total de atrasos por colaborador e mês
+        total_atraso_mes_colaborador = df_atraso.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
+
+        # Calcular a taxa de atraso como uma porcentagem
+        taxa_atraso_colaborador = (total_atraso_mes_colaborador / total_tarefas_mes_colaborador) * 100
+
+        # Preencher valores NaN com 0 (casos onde não houve atraso ou tarefa)
+        taxa_atraso_colaborador = taxa_atraso_colaborador.fillna(0)
+
+        # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
+        taxa_atraso_colaborador = taxa_atraso_colaborador.reset_index()
+
+        # Converter o período para string no formato 'MM/AAAA' diretamente com astype
+        taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
+
+        print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
+
+        return taxa_atraso_colaborador
+
+    def calcular_taxa_refacao_por_colaborador(df):
+        # Verificar se as colunas 'tipo de job' e 'colaborador' existem
+        if 'tipo de job' not in df.columns or 'colaborador' not in df.columns:
+            raise KeyError("As colunas 'tipo de job' ou 'colaborador' não foram encontradas no dataframe.")
+
+        # Converter 'data de inicio' para formato datetime
+        df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
+
+        # Remover linhas onde 'data de inicio' é NaT
+        df = df.dropna(subset=['data de inicio'])
+
+        # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
+        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
+
+        # Filtrar tarefas de Refação ou Retrabalho
+        df_refacao = df[
+            df['tipo de job'].str.contains('Refação|Retrabalho|Ajuste Complexo|Ajuste Simples', case=False, na=False)]
+
+        # Contar o total de tarefas por colaborador e mês
+        total_tarefas_mes_colaborador = df.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
+
+        # Contar o total de refações por colaborador e mês
+        total_refacao_mes_colaborador = df_refacao.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
+
+        # Calcular a taxa de refação como uma porcentagem
+        taxa_refacao_colaborador = (total_refacao_mes_colaborador / total_tarefas_mes_colaborador) * 100
+
+        # Preencher valores NaN com 0 (casos onde não houve refação ou tarefa)
+        taxa_refacao_colaborador = taxa_refacao_colaborador.fillna(0)
+
+        # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
+        taxa_refacao_colaborador = taxa_refacao_colaborador.reset_index()
+
+        # Converter o período para string no formato 'MM/AAAA' (sem usar datetime, diretamente com o Period)
+        taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].astype(str)
+
+        print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
+
+        return taxa_refacao_colaborador
+
     def calcular_taxa_refacao(df):
         # Verificar se as colunas 'tipo de job' e 'cliente' existem
         if 'tipo de job' not in df.columns or 'cliente' not in df.columns:
@@ -348,8 +427,17 @@ def fetch_runrunit_tasks(n_pags):
 
     df_taxa_atraso = calcular_taxa_atraso(df)
     df_taxa_atraso.to_excel('outputs/atraso.xlsx', index=False)
+
+    df_taxa_refacao_colaborador = calcular_taxa_refacao_por_colaborador(df)
+    df_taxa_refacao_colaborador.to_excel('outputs/refacao_col.xlsx',index=False)
+
+    df_taxa_atraso_colaborador = calcular_taxa_atraso_por_colaborador(df)
+    df_taxa_atraso_colaborador.to_excel('outputs/atraso_col.xlsx',index=False)
+
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_atraso, sheet_name="Macfor - Taxa de Atraso",sheet_url="https://docs.google.com/spreadsheets/d/1UL6Ya0MJRK0AMFFDCo_kKd3DyKfvY6oDcGMKGT-ZQ8o/edit?gid=0#gid=0")
-
+    upload_to_sheets(df_taxa_refacao_colaborador, sheet_name="Macfor 3",sheet_url="https://docs.google.com/spreadsheets/d/1V2vN67Y2Av-xmuCAbTe6B0rKQYgf8TibPTVzer5VwVU/edit?gid=0#gid=0")
+    upload_to_sheets(df_taxa_atraso_colaborador, sheet_name="Macfor 4",
+                     sheet_url="https://docs.google.com/spreadsheets/d/1L6T3MYyE74v7ElVhp9AjIt5ZTI1zJv4oYaPM4Up2L1s/edit?gid=0#gid=0")
