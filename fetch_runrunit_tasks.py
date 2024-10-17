@@ -438,6 +438,10 @@ def fetch_runrunit_tasks(n_pags):
 
     df_taxa_refacao_colaborador = df_taxa_refacao_colaborador.astype(str)
     df_taxa_atraso_colaborador = df_taxa_atraso_colaborador.astype(str)
+    df = df.astype(str)
+    df_taxa_atraso = df_taxa_atraso.astype(str)
+    df_taxa_refacao = df_taxa_refacao.astype(str)
+
 
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
