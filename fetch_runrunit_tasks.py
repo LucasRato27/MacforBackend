@@ -436,6 +436,9 @@ def fetch_runrunit_tasks(n_pags):
     df_taxa_atraso_colaborador = calcular_taxa_atraso_por_colaborador(df)
     df_taxa_atraso_colaborador.to_excel('outputs/atraso_col.xlsx',index=False)
 
+    df_taxa_refacao_colaborador = df_taxa_refacao_colaborador.astype(str)
+    df_taxa_atraso_colaborador = df_taxa_atraso_colaborador.astype(str)
+
     # Fazer o upload dos dados para o Google Sheets
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
