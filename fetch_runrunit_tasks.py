@@ -14,14 +14,12 @@ def fetch_runrunit_tasks(n_pags):
         if 'atraso' not in df.columns or 'colaborador' not in df.columns:
             raise KeyError("As colunas 'atraso' ou 'colaborador' não foram encontradas no dataframe.")
 
-        # Converter 'data de inicio' para formato datetime
+        # Converter 'data de inicio' para formato datetime e remover NaT
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
-
-        # Remover linhas onde 'data de inicio' é NaT
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
-        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
+        df.loc[:, 'mes_ano'] = df['data de inicio'].dt.to_period('M')
 
         # Filtrar tarefas de atraso (2. Atrasado e 3. Muito atrasado)
         df_atraso = df[df['atraso'].isin(['2. Atrasado', '3. Muito atrasado'])]
@@ -41,8 +39,11 @@ def fetch_runrunit_tasks(n_pags):
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_atraso_colaborador = taxa_atraso_colaborador.reset_index()
 
-        # Converter o período para string no formato 'MM/AAAA' diretamente com astype
+        # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
+
+        # Exportar para Excel para verificar a estrutura
+        taxa_atraso_colaborador.to_excel('df_taxa_atraso_colaborador_check.xlsx', index=False)
 
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
 
@@ -53,14 +54,12 @@ def fetch_runrunit_tasks(n_pags):
         if 'tipo de job' not in df.columns or 'colaborador' not in df.columns:
             raise KeyError("As colunas 'tipo de job' ou 'colaborador' não foram encontradas no dataframe.")
 
-        # Converter 'data de inicio' para formato datetime
+        # Converter 'data de inicio' para formato datetime e remover NaT
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
-
-        # Remover linhas onde 'data de inicio' é NaT
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
-        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
+        df.loc[:, 'mes_ano'] = df['data de inicio'].dt.to_period('M')
 
         # Filtrar tarefas de Refação ou Retrabalho
         df_refacao = df[
@@ -81,8 +80,11 @@ def fetch_runrunit_tasks(n_pags):
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_refacao_colaborador = taxa_refacao_colaborador.reset_index()
 
-        # Converter o período para string no formato 'MM/AAAA' (sem usar datetime, diretamente com o Period)
+        # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].astype(str)
+
+        # Exportar para Excel para verificar a estrutura
+        taxa_refacao_colaborador.to_excel('df_taxa_refacao_colaborador_check.xlsx', index=False)
 
         print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
 
@@ -439,5 +441,4 @@ def fetch_runrunit_tasks(n_pags):
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_atraso, sheet_name="Macfor - Taxa de Atraso",sheet_url="https://docs.google.com/spreadsheets/d/1UL6Ya0MJRK0AMFFDCo_kKd3DyKfvY6oDcGMKGT-ZQ8o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao_colaborador, sheet_name="Macfor 3",sheet_url="https://docs.google.com/spreadsheets/d/1V2vN67Y2Av-xmuCAbTe6B0rKQYgf8TibPTVzer5VwVU/edit?gid=0#gid=0")
-    upload_to_sheets(df_taxa_atraso_colaborador, sheet_name="Macfor 4",
-                     sheet_url="https://docs.google.com/spreadsheets/d/1L6T3MYyE74v7ElVhp9AjIt5ZTI1zJv4oYaPM4Up2L1s/edit?gid=0#gid=0")
+    upload_to_sheets(df_taxa_atraso_colaborador, sheet_name="Macfor 4",sheet_url="https://docs.google.com/spreadsheets/d/1L6T3MYyE74v7ElVhp9AjIt5ZTI1zJv4oYaPM4Up2L1s/edit?gid=0#gid=0")
