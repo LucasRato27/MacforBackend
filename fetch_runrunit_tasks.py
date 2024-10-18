@@ -364,6 +364,7 @@ def fetch_runrunit_tasks(n_pags):
 
             df['tempo_total_tasks'] = df['tempo_subtasks_horas'] + df['tempo_trabalhado_horas']
 
+            # Ler a planilha de pontuações do Google Sheets
             pontuacoes = read_google_sheet("https://docs.google.com/spreadsheets/d/1iDxF2ONzwaZAdIcuWE-adMyDIEVHGUx6F9nQsG0nYME/edit?gid=0#gid=0")
 
             # Mesclar com o DataFrame de pontuações
@@ -372,7 +373,7 @@ def fetch_runrunit_tasks(n_pags):
             # Step 1: Preencher valores NaN na coluna 'Multiplicador' com 0
             df['Multiplicador'] = df['Multiplicador'].fillna(0)
 
-            # Step 2: Remover espaços em branco, substituir vírgulas por pontos
+            # Step 2: Remover espaços em branco e substituir vírgulas por pontos
             df['Multiplicador'] = df['Multiplicador'].str.strip().replace(',', '.', regex=True)
 
             # Step 3: Converter 'Multiplicador' para numérico, convertendo erros para NaN
@@ -380,6 +381,13 @@ def fetch_runrunit_tasks(n_pags):
 
             # Step 4: Preencher valores NaN restantes com 0
             df['Multiplicador'] = df['Multiplicador'].fillna(0)
+
+            # Step 5: Converter a coluna 'Multiplicador' para string e adicionar aspas simples para evitar interpretação como data
+            df['Multiplicador'] = df['Multiplicador'].apply(lambda x: f"'{x}" if not pd.isna(x) else x)
+
+            # Step 6: Substituir pontos por vírgulas para evitar confusão com datas (opcional)
+            df['Multiplicador'] = df['Multiplicador'].apply(
+                lambda x: str(x).replace('.', ',') if isinstance(x, str) else x)
 
             # Remover a coluna 'Tipo_de_Job' após o merge
             df = df.drop(columns=['Tipo_de_Job'])
