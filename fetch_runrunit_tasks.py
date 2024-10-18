@@ -416,6 +416,9 @@ def fetch_runrunit_tasks(n_pags):
             df[data_base] = df[data_base].astype(str)
             df[data_base] = df[data_base].str.replace("NaT", "")
 
+            # Converter a coluna 'data ideal de inicio' para datetime, preservando apenas a data
+            df['data ideal de inicio'] = pd.to_datetime(df['data ideal de inicio'], errors='coerce').dt.strftime('%Y-%m-%d')
+
             df.to_excel('outputs/tarefas.xlsx', index=False)
 
             print("Dataframe fetched with dimensions: ", df.shape)
