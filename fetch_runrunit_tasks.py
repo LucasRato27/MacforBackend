@@ -42,8 +42,7 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
 
-        # Exportar para Excel para verificar a estrutura
-        taxa_atraso_colaborador.to_excel('df_taxa_atraso_colaborador_check.xlsx', index=False)
+        taxa_atraso_colaborador = taxa_atraso_colaborador.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
 
@@ -83,8 +82,7 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].astype(str)
 
-        # Exportar para Excel para verificar a estrutura
-        taxa_refacao_colaborador.to_excel('df_taxa_refacao_colaborador_check.xlsx', index=False)
+        taxa_refacao_colaborador = taxa_refacao_colaborador.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
         print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
 
@@ -123,9 +121,13 @@ def fetch_runrunit_tasks(n_pags):
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_refacao_cliente = taxa_refacao_cliente.reset_index()
 
-        # Converter o período para string no formato 'MM/AAAA' (sem usar datetime, diretamente com o Period)
+        # Converter o 'mes_ano' diretamente com astype para string
         taxa_refacao_cliente['mes_ano_str'] = taxa_refacao_cliente['mes_ano'].astype(str)
 
+        # Converter todas as colunas numéricas para string para evitar que sejam interpretadas como datas
+        taxa_refacao_cliente = taxa_refacao_cliente.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+
+        # Exportar ou exibir para garantir que os valores estão corretos
         print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
 
         return taxa_refacao_cliente
@@ -164,6 +166,8 @@ def fetch_runrunit_tasks(n_pags):
 
         # Converter o período para string no formato 'MM/AAAA' diretamente com astype
         taxa_atraso_cliente['mes_ano_str'] = taxa_atraso_cliente['mes_ano'].astype(str)
+
+        taxa_atraso_cliente = taxa_atraso_cliente.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
         print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
 
@@ -362,37 +366,46 @@ def fetch_runrunit_tasks(n_pags):
 
             pontuacoes = read_google_sheet("https://docs.google.com/spreadsheets/d/1iDxF2ONzwaZAdIcuWE-adMyDIEVHGUx6F9nQsG0nYME/edit?gid=0#gid=0")
 
+            # Mesclar com o DataFrame de pontuações
             df = df.merge(pontuacoes, how='left', left_on='tipo de job', right_on='Tipo_de_Job')
 
-            # Step 1: Fill NaN values in the 'Multiplicador' column with 0
+            # Step 1: Preencher valores NaN na coluna 'Multiplicador' com 0
             df['Multiplicador'] = df['Multiplicador'].fillna(0)
 
-            # Step 2: Ensure there are no leading or trailing spaces, then replace commas with dots
+            # Step 2: Remover espaços em branco, substituir vírgulas por pontos
             df['Multiplicador'] = df['Multiplicador'].str.strip().replace(',', '.', regex=True)
 
-            # Step 3: Convert 'Multiplicador' to numeric, coercing errors to NaN
+            # Step 3: Converter 'Multiplicador' para numérico, convertendo erros para NaN
             df['Multiplicador'] = pd.to_numeric(df['Multiplicador'], errors='coerce')
 
-            # Step 4: Fill any remaining NaN values with 0 (optional, depending on your needs)
+            # Step 4: Preencher valores NaN restantes com 0
             df['Multiplicador'] = df['Multiplicador'].fillna(0)
 
+            # Remover a coluna 'Tipo_de_Job' após o merge
             df = df.drop(columns=['Tipo_de_Job'])
 
+            # Substituir valores de atraso para os textos desejados
             df["atraso"] = df["atraso"].replace({
                 "on_schedule": "1. No prazo",
                 "soft_overdue": "2. Atrasado",
                 "hard_overdue": "3. Muito atrasado"
             })
 
-            # rename multiplicador to pontuacao
+            # Renomear 'Multiplicador' para 'Pontuação'
             df = df.rename(columns={
                 'Multiplicador': 'Pontuação'
             })
 
+            # Converter a coluna 'Pontuação' para string para evitar interpretação incorreta
+            df['Pontuação'] = df['Pontuação'].astype(str)
 
-            # coluna a se basear para datas
+            # Adicionar aspas simples para garantir que o Excel trate como texto
+            df['Pontuação'] = df['Pontuação'].apply(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+
+            # Coluna de data base
             data_base = "data ideal"
-            # Converte a coluna data_base para datetime, ignorando erros
+
+            # Converter a coluna data_base para datetime, ignorando erros
             df[data_base] = pd.to_datetime(df[data_base], errors='coerce')
 
             # Extrai o primeiro dia do mês e ano da data
