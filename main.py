@@ -32,14 +32,16 @@ st.title("Update Runrunnit Database")
 
 n_pags = st.number_input("Número de páginas", min_value=1, max_value=100, value=20, step=1)
 
-# Adicionando uma flag de controle
-automated_execution = True  # Você pode mudar para 'False' se precisar do controle manual.
-
-if automated_execution:
+# Verifica se a URL contém a query string para execução automática
+query_params = st.experimental_get_query_params()
+if "automated_execution" in query_params and query_params["automated_execution"][0].lower() == 'true':
+    # Executa automaticamente as funções
     fetch_runrunit_tasks(n_pags)
     fetch_runrunit_feedback()
     calculate_heathscore()
+    st.write("Execução automática concluída com sucesso.")
 else:
+    # Caso não seja execução automática, exibe o botão para execução manual
     if st.button("Executar"):
         fetch_runrunit_tasks(n_pags)
         fetch_runrunit_feedback()
