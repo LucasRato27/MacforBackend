@@ -15,7 +15,7 @@ def enviar_email(destinatario, assunto, mensagem):
 hoje = datetime.datetime.now().weekday()
 
 # Executar o envio de e-mail apenas na segunda-feira
-if hoje == 0:
+if 1==1:
     destinatario = "beatriz.guimaraes@macfor.com.br"
     assunto = "Lembrete do Preenchimento Runrunnit"
     mensagem = ("Boa tarde, Beatriz!\n"
