@@ -80,11 +80,10 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].dt.strftime('%m/%Y')
 
-        # Formatar as colunas numéricas com vírgulas para separar decimais
+        # Assegurar que todas as colunas, exceto 'mes_ano' e 'mes_ano_str', são numéricas
         for col in taxa_refacao_colaborador.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_refacao_colaborador[col] = taxa_refacao_colaborador[col].apply(
-                    lambda x: f"{x:.2f}".replace('.', ','))
+                taxa_refacao_colaborador[col] = pd.to_numeric(taxa_refacao_colaborador[col], errors='coerce').fillna(0)
 
         # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
@@ -126,7 +125,7 @@ def fetch_runrunit_tasks(n_pags):
         for col in taxa_refacao_cliente.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
                 # Formatar números com vírgula para separar decimais
-                taxa_refacao_cliente[col] = taxa_refacao_cliente[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
+                taxa_refacao_cliente[col] = pd.to_numeric(taxa_refacao_cliente[col], errors='coerce').fillna(0)
 
         # Exportar ou exibir para garantir que os valores estão corretos
         print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
@@ -167,7 +166,7 @@ def fetch_runrunit_tasks(n_pags):
         for col in taxa_atraso_cliente.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
                 # Formatar números com vírgula para separar decimais
-                taxa_atraso_cliente[col] = taxa_atraso_cliente[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
+                taxa_atraso_cliente[col] = pd.to_numeric(taxa_atraso_cliente[col], errors='coerce').fillna(0)
 
         # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
