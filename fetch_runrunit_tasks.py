@@ -19,7 +19,7 @@ def fetch_runrunit_tasks(n_pags):
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
-        df.loc[:, 'mes_ano'] = df['data de inicio'].dt.to_period('M')
+        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
 
         # Filtrar tarefas de atraso (2. Atrasado e 3. Muito atrasado)
         df_atraso = df[df['atraso'].isin(['2. Atrasado', '3. Muito atrasado'])]
@@ -30,11 +30,8 @@ def fetch_runrunit_tasks(n_pags):
         # Contar o total de atrasos por colaborador e mês
         total_atraso_mes_colaborador = df_atraso.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
 
-        # Calcular a taxa de atraso como uma porcentagem
-        taxa_atraso_colaborador = (total_atraso_mes_colaborador / total_tarefas_mes_colaborador) * 100
-
-        # Preencher valores NaN com 0 (casos onde não houve atraso ou tarefa)
-        taxa_atraso_colaborador = taxa_atraso_colaborador.fillna(0)
+        # Calcular a taxa de atraso como uma porcentagem e garantir que os valores sejam numéricos
+        taxa_atraso_colaborador = (total_atraso_mes_colaborador / total_tarefas_mes_colaborador * 100).fillna(0)
 
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_atraso_colaborador = taxa_atraso_colaborador.reset_index()
@@ -42,8 +39,10 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
 
-        # Remover a aplicação das aspas nos valores numéricos
-        taxa_atraso_colaborador = taxa_atraso_colaborador.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+        # Assegurar que todas as colunas exceto 'mes_ano_str' são numéricas
+        for col in taxa_atraso_colaborador.columns:
+            if col not in ['mes_ano', 'mes_ano_str']:
+                taxa_atraso_colaborador[col] = pd.to_numeric(taxa_atraso_colaborador[col], errors='coerce').fillna(0)
 
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
 
@@ -59,7 +58,7 @@ def fetch_runrunit_tasks(n_pags):
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
-        df.loc[:, 'mes_ano'] = df['data de inicio'].dt.to_period('M')
+        df['mes_ano'] = df['data de inicio'].dt.to_period('M')
 
         # Filtrar tarefas de Refação ou Retrabalho
         df_refacao = df[
@@ -71,11 +70,8 @@ def fetch_runrunit_tasks(n_pags):
         # Contar o total de refações por colaborador e mês
         total_refacao_mes_colaborador = df_refacao.groupby(['mes_ano', 'colaborador']).size().unstack(fill_value=0)
 
-        # Calcular a taxa de refação como uma porcentagem
-        taxa_refacao_colaborador = (total_refacao_mes_colaborador / total_tarefas_mes_colaborador) * 100
-
-        # Preencher valores NaN com 0 (casos onde não houve refação ou tarefa)
-        taxa_refacao_colaborador = taxa_refacao_colaborador.fillna(0)
+        # Calcular a taxa de refação como uma porcentagem e garantir que os valores sejam numéricos
+        taxa_refacao_colaborador = (total_refacao_mes_colaborador / total_tarefas_mes_colaborador * 100).fillna(0)
 
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_refacao_colaborador = taxa_refacao_colaborador.reset_index()
@@ -83,7 +79,10 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].astype(str)
 
-        taxa_refacao_colaborador = taxa_refacao_colaborador.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+        # Assegurar que todas as colunas, exceto 'mes_ano_str', são numéricas
+        for col in taxa_refacao_colaborador.columns:
+            if col not in ['mes_ano', 'mes_ano_str']:
+                taxa_refacao_colaborador[col] = pd.to_numeric(taxa_refacao_colaborador[col], errors='coerce').fillna(0)
 
         print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
 
@@ -94,10 +93,8 @@ def fetch_runrunit_tasks(n_pags):
         if 'tipo de job' not in df.columns or 'cliente' not in df.columns:
             raise KeyError("As colunas 'tipo de job' ou 'cliente' não foram encontradas no dataframe.")
 
-        # Converter 'data de inicio' para formato datetime
+        # Converter 'data de inicio' para formato datetime e remover NaT
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
-
-        # Remover linhas onde 'data de inicio' é NaT
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
@@ -113,20 +110,19 @@ def fetch_runrunit_tasks(n_pags):
         # Contar o total de refações por cliente e mês
         total_refacao_mes_cliente = df_refacao.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
-        # Calcular a taxa de refação como uma porcentagem
-        taxa_refacao_cliente = (total_refacao_mes_cliente / total_tarefas_mes_cliente) * 100
-
-        # Preencher valores NaN com 0 (casos onde não houve refação ou tarefa)
-        taxa_refacao_cliente = taxa_refacao_cliente.fillna(0)
+        # Calcular a taxa de refação como uma porcentagem e garantir que os valores sejam numéricos
+        taxa_refacao_cliente = (total_refacao_mes_cliente / total_tarefas_mes_cliente * 100).fillna(0)
 
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_refacao_cliente = taxa_refacao_cliente.reset_index()
 
-        # Converter o 'mes_ano' diretamente com astype para string
+        # Converter o 'mes_ano' para string no formato 'MM/AAAA' para evitar problemas de interpretação como data
         taxa_refacao_cliente['mes_ano_str'] = taxa_refacao_cliente['mes_ano'].astype(str)
 
-        # Converter todas as colunas numéricas para string para evitar que sejam interpretadas como datas
-        taxa_refacao_cliente = taxa_refacao_cliente.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+        # Garantir que todas as colunas, exceto 'mes_ano' e 'mes_ano_str', são numéricas
+        for col in taxa_refacao_cliente.columns:
+            if col not in ['mes_ano', 'mes_ano_str']:
+                taxa_refacao_cliente[col] = pd.to_numeric(taxa_refacao_cliente[col], errors='coerce').fillna(0)
 
         # Exportar ou exibir para garantir que os valores estão corretos
         print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
@@ -138,10 +134,8 @@ def fetch_runrunit_tasks(n_pags):
         if 'atraso' not in df.columns or 'cliente' not in df.columns:
             raise KeyError("As colunas 'atraso' ou 'cliente' não foram encontradas no dataframe.")
 
-        # Converter 'data de inicio' para formato datetime
+        # Converter 'data de inicio' para formato datetime e remover NaT
         df['data de inicio'] = pd.to_datetime(df['data de inicio'], errors='coerce')
-
-        # Remover linhas onde 'data de inicio' é NaT
         df = df.dropna(subset=['data de inicio'])
 
         # Criar uma nova coluna 'mes_ano' para agrupar por mês e ano
@@ -156,20 +150,21 @@ def fetch_runrunit_tasks(n_pags):
         # Contar o total de atrasos por cliente e mês
         total_atraso_mes_cliente = df_atraso.groupby(['mes_ano', 'cliente']).size().unstack(fill_value=0)
 
-        # Calcular a taxa de atraso como uma porcentagem
-        taxa_atraso_cliente = (total_atraso_mes_cliente / total_tarefas_mes_cliente) * 100
-
-        # Preencher valores NaN com 0 (casos onde não houve atraso ou tarefa)
-        taxa_atraso_cliente = taxa_atraso_cliente.fillna(0)
+        # Calcular a taxa de atraso como uma porcentagem e garantir que os valores sejam numéricos
+        taxa_atraso_cliente = (total_atraso_mes_cliente / total_tarefas_mes_cliente * 100).fillna(0)
 
         # Resetar o índice para adicionar 'mes_ano' como uma coluna em vez de índice
         taxa_atraso_cliente = taxa_atraso_cliente.reset_index()
 
-        # Converter o período para string no formato 'MM/AAAA' diretamente com astype
+        # Converter o 'mes_ano' para string no formato 'MM/AAAA' para evitar problemas de interpretação como data
         taxa_atraso_cliente['mes_ano_str'] = taxa_atraso_cliente['mes_ano'].astype(str)
 
-        taxa_atraso_cliente = taxa_atraso_cliente.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+        # Garantir que todas as colunas, exceto 'mes_ano' e 'mes_ano_str', são numéricas
+        for col in taxa_atraso_cliente.columns:
+            if col not in ['mes_ano', 'mes_ano_str']:
+                taxa_atraso_cliente[col] = pd.to_numeric(taxa_atraso_cliente[col], errors='coerce').fillna(0)
 
+        # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
 
         return taxa_atraso_cliente
@@ -193,13 +188,6 @@ def fetch_runrunit_tasks(n_pags):
         # Read the CSV into a pandas DataFrame
         df = pd.read_csv(csv_export_url)
         return df
-
-
-    def seconds_to_hms(seconds):
-        hours = seconds // 3600
-        minutes = (seconds % 3600) // 60
-        seconds = seconds % 60
-        return f"{int(hours)}:{int(minutes)}:{int(seconds)}"
 
     # Função para fazer a chamada de API e retornar df.
     def fetch_runrunit_tasks(
