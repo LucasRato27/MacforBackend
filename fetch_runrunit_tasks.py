@@ -366,29 +366,23 @@ def fetch_runrunit_tasks(n_pags):
             df['tempo_total_tasks'] = df['tempo_subtasks_horas'] + df['tempo_trabalhado_horas']
 
             # Ler a planilha de pontuações do Google Sheets
-            pontuacoes = read_google_sheet("https://docs.google.com/spreadsheets/d/1iDxF2ONzwaZAdIcuWE-adMyDIEVHGUx6F9nQsG0nYME/edit?gid=0#gid=0")
+            pontuacoes = read_google_sheet(
+                "https://docs.google.com/spreadsheets/d/1iDxF2ONzwaZAdIcuWE-adMyDIEVHGUx6F9nQsG0nYME/edit?gid=0#gid=0")
 
-            # Mesclar com o DataFrame de pontuações
+            # Mesclar com o DataFrame principal com base no tipo de job
             df = df.merge(pontuacoes, how='left', left_on='tipo de job', right_on='Tipo_de_Job')
 
-            # Step 1: Preencher valores NaN na coluna 'Multiplicador' com 0
-            df['Multiplicador'] = df['Multiplicador'].fillna(0)
+            # Preencher valores NaN na coluna 'Multiplicador' com 0, remover espaços em branco, e substituir vírgulas por pontos
+            df['Multiplicador'] = df['Multiplicador'].fillna(0).astype(str).str.strip().replace(',', '.', regex=True)
 
-            # Step 2: Remover espaços em branco e substituir vírgulas por pontos
-            df['Multiplicador'] = df['Multiplicador'].str.strip().replace(',', '.', regex=True)
+            # Converter 'Multiplicador' para numérico, convertendo erros para NaN, e preencher NaN com 0
+            df['Multiplicador'] = pd.to_numeric(df['Multiplicador'], errors='coerce').fillna(0)
 
-            # Step 3: Converter 'Multiplicador' para numérico, convertendo erros para NaN
-            df['Multiplicador'] = pd.to_numeric(df['Multiplicador'], errors='coerce')
+            # Renomear 'Multiplicador' para 'Pontuação'
+            df = df.rename(columns={'Multiplicador': 'Pontuação'})
 
-            # Step 4: Preencher valores NaN restantes com 0
-            df['Multiplicador'] = df['Multiplicador'].fillna(0)
-
-            # Step 5: Converter a coluna 'Multiplicador' para string e adicionar aspas simples para evitar interpretação como data
-            df['Multiplicador'] = df['Multiplicador'].apply(lambda x: f"'{x}" if not pd.isna(x) else x)
-
-            # Step 6: Substituir pontos por vírgulas para evitar confusão com datas (opcional)
-            df['Multiplicador'] = df['Multiplicador'].apply(
-                lambda x: str(x).replace('.', ',') if isinstance(x, str) else x)
+            # Converter a coluna 'Pontuação' para ter duas casas decimais e substituir pontos por vírgulas
+            df['Pontuação'] = df['Pontuação'].apply(lambda x: f"{x:.2f}".replace('.', ','))
 
             # Remover a coluna 'Tipo_de_Job' após o merge
             df = df.drop(columns=['Tipo_de_Job'])
@@ -399,17 +393,6 @@ def fetch_runrunit_tasks(n_pags):
                 "soft_overdue": "2. Atrasado",
                 "hard_overdue": "3. Muito atrasado"
             })
-
-            # Renomear 'Multiplicador' para 'Pontuação'
-            df = df.rename(columns={
-                'Multiplicador': 'Pontuação'
-            })
-
-            # Converter a coluna 'Pontuação' para string para evitar interpretação incorreta
-            #df['Pontuação'] = df['Pontuação'].astype(str)
-
-            # Adicionar aspas simples para garantir que o Excel trate como texto
-            #df['Pontuação'] = df['Pontuação'].apply(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
             # Coluna de data base
             data_base = "data ideal"
@@ -460,8 +443,6 @@ def fetch_runrunit_tasks(n_pags):
 
     df_taxa_atraso_colaborador = calcular_taxa_atraso_por_colaborador(df)
     df_taxa_atraso_colaborador.to_excel('outputs/atraso_col.xlsx',index=False)
-
-
 
 
     # Fazer o upload dos dados para o Google Sheets
