@@ -37,13 +37,15 @@ def fetch_runrunit_tasks(n_pags):
         taxa_atraso_colaborador = taxa_atraso_colaborador.reset_index()
 
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
-        taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
+        taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].dt.strftime('%m/%Y')
 
-        # Assegurar que todas as colunas exceto 'mes_ano_str' são numéricas
+        # Formatar as colunas numéricas com vírgulas para separar decimais
         for col in taxa_atraso_colaborador.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_atraso_colaborador[col] = pd.to_numeric(taxa_atraso_colaborador[col], errors='coerce').fillna(0)
+                taxa_atraso_colaborador[col] = taxa_atraso_colaborador[col].apply(
+                    lambda x: f"{x:.2f}".replace('.', ','))
 
+        # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
 
         return taxa_atraso_colaborador
@@ -77,13 +79,15 @@ def fetch_runrunit_tasks(n_pags):
         taxa_refacao_colaborador = taxa_refacao_colaborador.reset_index()
 
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
-        taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].astype(str)
+        taxa_refacao_colaborador['mes_ano_str'] = taxa_refacao_colaborador['mes_ano'].dt.strftime('%m/%Y')
 
-        # Assegurar que todas as colunas, exceto 'mes_ano_str', são numéricas
+        # Formatar as colunas numéricas com vírgulas para separar decimais
         for col in taxa_refacao_colaborador.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_refacao_colaborador[col] = pd.to_numeric(taxa_refacao_colaborador[col], errors='coerce').fillna(0)
+                taxa_refacao_colaborador[col] = taxa_refacao_colaborador[col].apply(
+                    lambda x: f"{x:.2f}".replace('.', ','))
 
+        # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de refação por colaborador:\n", taxa_refacao_colaborador)
 
         return taxa_refacao_colaborador
@@ -117,12 +121,13 @@ def fetch_runrunit_tasks(n_pags):
         taxa_refacao_cliente = taxa_refacao_cliente.reset_index()
 
         # Converter o 'mes_ano' para string no formato 'MM/AAAA' para evitar problemas de interpretação como data
-        taxa_refacao_cliente['mes_ano_str'] = taxa_refacao_cliente['mes_ano'].astype(str)
+        taxa_refacao_cliente['mes_ano_str'] = taxa_refacao_cliente['mes_ano'].dt.strftime('%m/%Y')
 
-        # Garantir que todas as colunas, exceto 'mes_ano' e 'mes_ano_str', são numéricas
+        # Formatar as colunas numéricas para utilizar vírgula como separador decimal
         for col in taxa_refacao_cliente.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_refacao_cliente[col] = pd.to_numeric(taxa_refacao_cliente[col], errors='coerce').fillna(0)
+                # Formatar números com vírgula para separar decimais
+                taxa_refacao_cliente[col] = taxa_refacao_cliente[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
 
         # Exportar ou exibir para garantir que os valores estão corretos
         print("DataFrame final de taxa de refação por cliente:\n", taxa_refacao_cliente)
@@ -157,12 +162,13 @@ def fetch_runrunit_tasks(n_pags):
         taxa_atraso_cliente = taxa_atraso_cliente.reset_index()
 
         # Converter o 'mes_ano' para string no formato 'MM/AAAA' para evitar problemas de interpretação como data
-        taxa_atraso_cliente['mes_ano_str'] = taxa_atraso_cliente['mes_ano'].astype(str)
+        taxa_atraso_cliente['mes_ano_str'] = taxa_atraso_cliente['mes_ano'].dt.strftime('%m/%Y')
 
-        # Garantir que todas as colunas, exceto 'mes_ano' e 'mes_ano_str', são numéricas
+        # Formatar as colunas numéricas para utilizar vírgula como separador decimal
         for col in taxa_atraso_cliente.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_atraso_cliente[col] = pd.to_numeric(taxa_atraso_cliente[col], errors='coerce').fillna(0)
+                # Formatar números com vírgula para separar decimais
+                taxa_atraso_cliente[col] = taxa_atraso_cliente[col].apply(lambda x: f"{x:.2f}".replace('.', ','))
 
         # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de atraso por cliente:\n", taxa_atraso_cliente)
