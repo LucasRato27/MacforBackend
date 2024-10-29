@@ -406,7 +406,7 @@ def fetch_runrunit_tasks(n_pags):
             })
 
             # Converter a coluna 'Pontuação' para string para evitar interpretação incorreta
-            df['Pontuação'] = df['Pontuação'].astype(str)
+            #df['Pontuação'] = df['Pontuação'].astype(str)
 
             # Adicionar aspas simples para garantir que o Excel trate como texto
             #df['Pontuação'] = df['Pontuação'].apply(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
