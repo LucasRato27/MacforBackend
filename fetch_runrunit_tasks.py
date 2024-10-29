@@ -39,11 +39,10 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].dt.strftime('%m/%Y')
 
-        # Formatar as colunas numéricas com vírgulas para separar decimais
+        # Assegurar que todas as colunas numéricas fiquem no formato float (sem aspas)
         for col in taxa_atraso_colaborador.columns:
             if col not in ['mes_ano', 'mes_ano_str']:
-                taxa_atraso_colaborador[col] = taxa_atraso_colaborador[col].apply(
-                    lambda x: f"{x:.2f}".replace('.', ','))
+                taxa_atraso_colaborador[col] = taxa_atraso_colaborador[col].astype(float)
 
         # Exibir o DataFrame final para verificação
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
