@@ -42,6 +42,7 @@ def fetch_runrunit_tasks(n_pags):
         # Converter o 'mes_ano' para string no formato 'MM/AAAA'
         taxa_atraso_colaborador['mes_ano_str'] = taxa_atraso_colaborador['mes_ano'].astype(str)
 
+        # Remover a aplicação das aspas nos valores numéricos
         taxa_atraso_colaborador = taxa_atraso_colaborador.applymap(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
         print("DataFrame final de taxa de atraso por colaborador:\n", taxa_atraso_colaborador)
@@ -408,7 +409,7 @@ def fetch_runrunit_tasks(n_pags):
             df['Pontuação'] = df['Pontuação'].astype(str)
 
             # Adicionar aspas simples para garantir que o Excel trate como texto
-            df['Pontuação'] = df['Pontuação'].apply(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
+            #df['Pontuação'] = df['Pontuação'].apply(lambda x: f"'{x}" if isinstance(x, (int, float)) else x)
 
             # Coluna de data base
             data_base = "data ideal"
