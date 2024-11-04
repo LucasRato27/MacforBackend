@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import streamlit as st
 from utils.upload_to_sheets import upload_to_sheets
+from media_problemas import calcular_media_problemas
 
 """
 Url da planilha sendo editada: https://docs.google.com/spreadsheets/d/1OWdcEc5NozVGXvDkAlrlCgs-5HUc8KeH3BXF-QqHlf4/edit?gid=1456452784#gid=1456452784
@@ -321,6 +322,8 @@ def fetch_runrunit_tasks(n_pags):
 
 
             df["custom_37"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_37"]) if "custom_37" in x else None)
+            df["custom_37"] = df["custom_37"].str.split(', ')
+            df = df.explode('custom_37')
             df["custom_38"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_38"]) if "custom_38" in x else None)
             df["custom_39"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_39"]) if "custom_39" in x else None)
             df["custom_40"] = df["campos personalizados"].apply(lambda x: extrair_labels(x["custom_40"]) if "custom_40" in x else None)
@@ -436,8 +439,10 @@ def fetch_runrunit_tasks(n_pags):
     df_taxa_atraso_colaborador = calcular_taxa_atraso_por_colaborador(df)
     df_taxa_atraso_colaborador.to_excel('outputs/atraso_col.xlsx',index=False)
 
+    media_problemas = calcular_media_problemas(df)
 
     # Fazer o upload dos dados para o Google Sheets
+    upload_to_sheets(media_problemas, sheet_name="Macfor 3",sheet_url="https://docs.google.com/spreadsheets/d/1mctKJamrrVljxAoyxwMlpkcGCDEfWEFkii28vydsfXI/edit?gid=0#gid=0")
     upload_to_sheets(df, sheet_name="Macfor",sheet_url="https://docs.google.com/spreadsheets/d/1HSn9o3EeBk49dm0OdlBUKaTkdTVj2NsRQWnuDp5tD9o/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_refacao, sheet_name="Macfor 2",sheet_url="https://docs.google.com/spreadsheets/d/1o1ukAgKqjchHLttsLx9jukNbxx5XfIeoAwm69NoFIS0/edit?gid=0#gid=0")
     upload_to_sheets(df_taxa_atraso, sheet_name="Macfor - Taxa de Atraso",sheet_url="https://docs.google.com/spreadsheets/d/1UL6Ya0MJRK0AMFFDCo_kKd3DyKfvY6oDcGMKGT-ZQ8o/edit?gid=0#gid=0")

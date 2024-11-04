@@ -7,3 +7,4 @@ gspread-dataframe
 pandas
 openpyxl
 yagmail
+numpy
