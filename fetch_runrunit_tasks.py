@@ -254,50 +254,51 @@ def fetch_runrunit_tasks(n_pags):
                 for field in date_fields:
                     tarefa[field] = format_date(tarefa.get(field))
 
-                tarefa_filtrada = {
-                    'data de inicio': tarefa['start_date'],
-                    'data de fechamento': tarefa['close_date'],
-                    'data ideal': tarefa['desired_date'],
-                    'data ideal de inicio': tarefa['desired_start_date'],
-                    'data estimada de entrega': tarefa['estimated_delivery_date'],
-                    'data fim gantt': tarefa['gantt_bar_end_date'],
-                    'id Runrunit': tarefa['id'],
-                    'titulo': tarefa['title'],
-                    'cliente': tarefa['client_name'],
-                    'projeto': tarefa['project_name'],
-                    'tipo de tarefa': tarefa['type_name'],
-                    'colaborador': tarefa['responsible_name'],
-                    'estado': tarefa['state'],
-                    'status': tarefa['task_status_name'],
-                    'etapa': tarefa['board_stage_name'],
-                    'board_stage_description': tarefa['board_stage_description'],
-                    "board_stage_position": tarefa['board_stage_position'],
-                    'atraso': tarefa['overdue'],
-                    'Time': tarefa['team_name'],
-                    'board': tarefa['board_name'],
-                    'foi reaberto': tarefa['was_reopened'],
-                    'fechado?': tarefa['is_closed'],
-                    'numero de subtarefas': tarefa['subtasks_count'],
-                    'tempo trabalhado': tarefa['time_worked'],
-                    'priority': tarefa['priority'],
-                    'sendo trabalhado': tarefa['is_working_on'],
-                    'é urgente?': tarefa['is_urgent'],
-                    'é subtarefa?': tarefa['is_subtask'],
-                    'campos personalizados': tarefa['custom_fields'], # deve ser tratado depois
-                    'tags': tarefa['tags_data'],
-                    'ids dos filhos': tarefa['child_ids'],
-                    'id dos prerequisitos': tarefa['parent_ids'],
-                    'id do pai': tarefa['parent_task_id'],
-                    'nome do pai': tarefa['parent_task_title'],
-                    'ids das subtarefas': tarefa['subtask_ids'],
-                    'tempo trabalhado em subtasks': tarefa['all_subtasks_time_worked'],
-                    'numero de anexos': tarefa['attachments_count'], # nao sera usado
-                }
-                tarefas_filtradas.append(tarefa_filtrada)
+                # Processar os assignments de cada tarefa
+                assignments = tarefa.get("assignments", [])
+                for assignment in assignments:
+                    tarefa_filtrada = {
+                        'data de inicio': assignment.get('start_date', 'N/A'),
+                        'data de fechamento': assignment.get('close_date', 'N/A'),
+                        'data ideal': tarefa['desired_date'],
+                        'data ideal de inicio': tarefa['desired_start_date'],
+                        'data estimada de entrega': tarefa['estimated_delivery_date'],
+                        'data fim gantt': tarefa['gantt_bar_end_date'],
+                        'id Runrunit': tarefa['id'],
+                        'titulo': tarefa['title'],
+                        'cliente': tarefa['client_name'],
+                        'projeto': tarefa['project_name'],
+                        'tipo de tarefa': tarefa['type_name'],
+                        'colaborador': assignment.get('assignee_name', 'N/A'),
+                        'estado': tarefa['state'],
+                        'status': tarefa['task_status_name'],
+                        'etapa': tarefa['board_stage_name'],
+                        'board_stage_description': tarefa['board_stage_description'],
+                        "board_stage_position": tarefa['board_stage_position'],
+                        'atraso': tarefa['overdue'],
+                        'Time': assignment.get('team_name', 'N/A'),
+                        'board': tarefa['board_name'],
+                        'foi reaberto': tarefa['was_reopened'],
+                        'fechado?': assignment.get('is_closed', 'N/A'),
+                        'numero de subtarefas': tarefa['subtasks_count'],
+                        'tempo trabalhado': assignment.get('time_worked', 'N/A'),
+                        'priority': assignment.get('priority', 'N/A'),
+                        'sendo trabalhado': tarefa['is_working_on'],
+                        'é urgente?': tarefa['is_urgent'],
+                        'é subtarefa?': tarefa['is_subtask'],
+                        'campos personalizados': tarefa['custom_fields'], # deve ser tratado depois
+                        'tags': tarefa['tags_data'],
+                        'ids dos filhos': tarefa['child_ids'],
+                        'id dos prerequisitos': tarefa['parent_ids'],
+                        'id do pai': tarefa['parent_task_id'],
+                        'nome do pai': tarefa['parent_task_title'],
+                        'ids das subtarefas': tarefa['subtask_ids'],
+                        'tempo trabalhado em subtasks': tarefa['all_subtasks_time_worked'],
+                        'numero de anexos': tarefa['attachments_count'], # nao sera usado
+                    }
+                    tarefas_filtradas.append(tarefa_filtrada)
 
             df = pd.DataFrame(tarefas_filtradas)
-
-            # df.to_excel("outputs/tarefas.xlsx", index=False)
 
             # drop campos personalizados nan
             df = df.dropna(subset=["campos personalizados"])
