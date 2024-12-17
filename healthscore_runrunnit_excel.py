@@ -1,7 +1,6 @@
 import requests
 import json
 import pandas as pd
-import datetime
 
 #Function to convert seconds to hms
 def seconds_to_hms(seconds):
